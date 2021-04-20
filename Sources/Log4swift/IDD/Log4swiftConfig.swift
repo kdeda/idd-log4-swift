@@ -92,4 +92,9 @@ public class IDDLog4swift: NSObject {
     static public func getLogger(_ value: Any) -> Logger {
         return IDDLog4swift.getLogger(String(describing: type(of: value)))
     }
+    
+    static public subscript(identifier: String) -> Logger {
+        getLogger(identifier)
+    }
+
 }
