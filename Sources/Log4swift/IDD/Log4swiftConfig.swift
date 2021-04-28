@@ -96,5 +96,8 @@ public class IDDLog4swift: NSObject {
     static public subscript(identifier: String) -> Logger {
         getLogger(identifier)
     }
-
+    
+    static public subscript<T>(type: T.Type) -> Logger {
+        return getLogger(String(reflecting: type))
+    }
 }
