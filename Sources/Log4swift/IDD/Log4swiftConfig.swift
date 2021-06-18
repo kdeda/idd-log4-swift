@@ -51,7 +51,7 @@ public class Log4swiftConfig: NSObject {
     }
 }
 
-public class IDDLog4swift: NSObject {
+public class Log4swift: NSObject {
     static public func getLogger(_ identifier: String) -> Logger {
         let rv = Logger.getLogger(identifier)
         let level: String = {
@@ -90,7 +90,7 @@ public class IDDLog4swift: NSObject {
     }
     
     static public func getLogger(_ value: Any) -> Logger {
-        return IDDLog4swift.getLogger(String(describing: type(of: value)))
+        return Log4swift.getLogger(String(describing: type(of: value)))
     }
     
     static public subscript(identifier: String) -> Logger {
