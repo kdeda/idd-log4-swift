@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Log4swift",
+    name: "idd-log4swift",
     platforms: [
 //      .iOS(.v13),
       .macOS(.v10_12)
