@@ -12,5 +12,14 @@ open the Log4swift.xcodeproj and drop all the .h, .m files, all legacy before 10
 
 once we can compile with no errors move the Log4swift/Log4swift into our package
 
- 
+## Log Spamming
+To block spamming messages, ie: CVDisplayLinkStart and stuff
+
+Run Console.app
+Start streaming
+Filter for your noise ie: CVDisplayLinkStart
+Locate the Subsystem ie: com.apple.corevideo
+
+Now tell log config to block these.
+sudo log config --mode "level:off" --subsystem com.apple.corevideo
 
