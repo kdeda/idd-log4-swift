@@ -276,7 +276,8 @@ A logger is identified by a UTI identifier, it defines a threshold level and a d
 
       let logClosure = {
         for currentAppender in self.appenders {
-					currentAppender.log(message, level:level, info: info)
+          // we want some extra space before the real message, all the formatted bs
+          currentAppender.log("  " + message, level:level, info: info)
         }
       }
 
