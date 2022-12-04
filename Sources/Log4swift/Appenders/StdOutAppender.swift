@@ -26,112 +26,132 @@ StdOutAppender will print the log to stdout or stderr depending on thresholds an
 * If both general and error threshold are reached, log will be printed to stderr
 */
 public class StdOutAppender: Appender {
-  public enum DictionaryKey: String {
-    case ErrorThreshold = "ErrorThresholdLevel"
-    case TextColors = "TextColors"
-    case BackgroundColors = "BackgroundColors"
-    case ForcedTTYType = "ForcedTTYType"
-  }
-  
-  public enum TTYType {
-    /// Xcode with XcodeColors plugin
-    case XcodeColors
-    /// xterm-256color terminal
-    case XtermColor
-    /// non color-compatible tty
-    case Other
-
-    init(_ name: String) {
-      switch(name.lowercased()) {
-      case "xterm" : self = .XtermColor
-      case "xcodecolors" : self = .XcodeColors
-      default: self = .Other
-      }
-    }
-  }
-  
-  /// ttyType will determine what color codes should be used if colors are enabled.
-  /// This is supposed to be automatically detected when creating the logger.
-  /// Change that only if you need to override the automatic detection.
-  public var ttyType: TTYType
-  public var errorThresholdLevel: LogLevel? = .Error
-  internal fileprivate(set) var textColors = [LogLevel: TTYColor]()
-  internal fileprivate(set) var backgroundColors = [LogLevel: TTYColor]()
-  
-  @objc
-  public required init(_ identifier: String) {
-    let xcodeColors = ProcessInfo().environment["XcodeColors"]
-    let terminalType = ProcessInfo().environment["TERM"]
-    switch (xcodeColors, terminalType) {
-    case (.some("YES"), _):
-      self.ttyType = .XcodeColors
-    case (_, .some("xterm-256color")):
-      self.ttyType = .XtermColor
-    default:
-      self.ttyType = .Other
+    public enum DictionaryKey: String {
+        case ErrorThreshold = "ErrorThresholdLevel"
+        case TextColors = "TextColors"
+        case BackgroundColors = "BackgroundColors"
+        case ForcedTTYType = "ForcedTTYType"
     }
     
-    super.init(identifier)
-  }
-  
-  public override func update(withDictionary dictionary: Dictionary<String, Any>, availableFormatters: Array<Formatter>) throws {
-    
-		try super.update(withDictionary: dictionary, availableFormatters: availableFormatters)
-    
-    if let errorThresholdString = (dictionary[DictionaryKey.ErrorThreshold.rawValue] as? String) {
-      if let errorThreshold = LogLevel(errorThresholdString) {
-        errorThresholdLevel = errorThreshold
-      } else {
-				throw NSError.Log4swiftError(description: "Invalide '\(DictionaryKey.ErrorThreshold.rawValue)' value for Stdout appender '\(self.identifier)'")
-      }
-    } else {
-      errorThresholdLevel = nil
-    }
-    
-    if let textColors = (dictionary[DictionaryKey.TextColors.rawValue] as? Dictionary<String, String>) {
-      for (levelName, colorName) in textColors {
-        guard let level = LogLevel(levelName) else {
-          throw NSError.Log4swiftError(description: "Invalide level '\(levelName)' in '\(DictionaryKey.TextColors.rawValue)' for Stdout appender '\(self.identifier)'")
+    public enum TTYType {
+        /// Xcode with XcodeColors plugin
+        case XcodeColors
+        /// xterm-256color terminal
+        case XtermColor
+        /// non color-compatible tty
+        case Other
+        
+        init(_ name: String) {
+            switch(name.lowercased()) {
+            case "xterm" : self = .XtermColor
+            case "xcodecolors" : self = .XcodeColors
+            default: self = .Other
+            }
         }
-        guard let color = TTYColor(colorName) else {
-          throw NSError.Log4swiftError(description: "Invalide color '\(colorName)' in '\(DictionaryKey.TextColors.rawValue)' for Stdout appender '\(self.identifier)'")
-        }
-
-        self.textColors[level] = color
-      }
     }
-
-    if let backgroundColors = (dictionary[DictionaryKey.BackgroundColors.rawValue] as? Dictionary<String, String>) {
-      for (levelName, colorName) in backgroundColors {
-        guard let level = LogLevel(levelName) else {
-          throw NSError.Log4swiftError(description: "Invalide level '\(levelName)' in '\(DictionaryKey.BackgroundColors.rawValue)' for Stdout appender '\(self.identifier)'")
-        }
-        guard let color = TTYColor(colorName) else {
-          throw NSError.Log4swiftError(description: "Invalide color '\(colorName)' in '\(DictionaryKey.BackgroundColors.rawValue)' for Stdout appender '\(self.identifier)'")
+    
+    /// ttyType will determine what color codes should be used if colors are enabled.
+    /// This is supposed to be automatically detected when creating the logger.
+    /// Change that only if you need to override the automatic detection.
+    public var ttyType: TTYType
+    public var errorThresholdLevel: LogLevel? = .Error
+    internal fileprivate(set) var textColors = [LogLevel: TTYColor]()
+    internal fileprivate(set) var backgroundColors = [LogLevel: TTYColor]()
+    
+    @objc
+    public required init(_ identifier: String) {
+        let xcodeColors = ProcessInfo().environment["XcodeColors"]
+        let terminalType = ProcessInfo().environment["TERM"]
+        switch (xcodeColors, terminalType) {
+        case (.some("YES"), _):
+            self.ttyType = .XcodeColors
+        case (_, .some("xterm-256color")):
+            self.ttyType = .XtermColor
+        default:
+            self.ttyType = .Other
         }
         
-        self.backgroundColors[level] = color
-      }
+        super.init(identifier)
     }
     
-    if let forcedTtyType = (dictionary[DictionaryKey.ForcedTTYType.rawValue] as? String) {
-      self.ttyType = TTYType(forcedTtyType)
+    public override func update(withDictionary dictionary: Dictionary<String, Any>, availableFormatters: Array<Formatter>) throws {
+        
+        try super.update(withDictionary: dictionary, availableFormatters: availableFormatters)
+        
+        if let errorThresholdString = (dictionary[DictionaryKey.ErrorThreshold.rawValue] as? String) {
+            if let errorThreshold = LogLevel(errorThresholdString) {
+                errorThresholdLevel = errorThreshold
+            } else {
+                throw NSError.Log4swiftError(description: "Invalide '\(DictionaryKey.ErrorThreshold.rawValue)' value for Stdout appender '\(self.identifier)'")
+            }
+        } else {
+            errorThresholdLevel = nil
+        }
+        
+        if let textColors = (dictionary[DictionaryKey.TextColors.rawValue] as? Dictionary<String, String>) {
+            for (levelName, colorName) in textColors {
+                guard let level = LogLevel(levelName) else {
+                    throw NSError.Log4swiftError(description: "Invalide level '\(levelName)' in '\(DictionaryKey.TextColors.rawValue)' for Stdout appender '\(self.identifier)'")
+                }
+                guard let color = TTYColor(colorName) else {
+                    throw NSError.Log4swiftError(description: "Invalide color '\(colorName)' in '\(DictionaryKey.TextColors.rawValue)' for Stdout appender '\(self.identifier)'")
+                }
+                
+                self.textColors[level] = color
+            }
+        }
+        
+        if let backgroundColors = (dictionary[DictionaryKey.BackgroundColors.rawValue] as? Dictionary<String, String>) {
+            for (levelName, colorName) in backgroundColors {
+                guard let level = LogLevel(levelName) else {
+                    throw NSError.Log4swiftError(description: "Invalide level '\(levelName)' in '\(DictionaryKey.BackgroundColors.rawValue)' for Stdout appender '\(self.identifier)'")
+                }
+                guard let color = TTYColor(colorName) else {
+                    throw NSError.Log4swiftError(description: "Invalide color '\(colorName)' in '\(DictionaryKey.BackgroundColors.rawValue)' for Stdout appender '\(self.identifier)'")
+                }
+                
+                self.backgroundColors[level] = color
+            }
+        }
+        
+        if let forcedTtyType = (dictionary[DictionaryKey.ForcedTTYType.rawValue] as? String) {
+            self.ttyType = TTYType(forcedTtyType)
+        }
     }
-  }
-  
-  public override func performLog(_ log: String, level: LogLevel, info: LogInfoDictionary) {
-    var destinationFile = stdout
     
-    if let errorThresholdLevel = self.errorThresholdLevel {
-      if(level.rawValue >= errorThresholdLevel.rawValue) {
-        destinationFile  = stderr
-      }
+    public override func performLog(_ log: String, level: LogLevel, info: LogInfoDictionary) {
+        var destinationFile = stdout
+        
+        if let errorThresholdLevel = self.errorThresholdLevel {
+            if(level.rawValue >= errorThresholdLevel.rawValue) {
+                destinationFile  = stderr
+            }
+        }
+        
+        let finalLogString = self.colorizeLog(log: log, level: level) + "\n"
+        let bufferSize = 1024
+        if finalLogString.count > bufferSize {
+            // In xcode 14.1, while debuging a giant log message realized fputs was not printing the entire message
+            // found 1024 at a time to be ok
+            // weeird ...
+            // December 3, 2022
+            var start = finalLogString.startIndex
+            var length = finalLogString.count
+            
+            repeat {
+                let end = finalLogString.index(start, offsetBy: min(bufferSize, length))
+                let substring = finalLogString[start ..< end]
+                fputs(String(substring), destinationFile)
+
+                start = end
+                length -= bufferSize
+            } while length > 0
+        } else {
+            fputs(finalLogString, destinationFile)
+        }
+        // fflush(destinationFile)
     }
     
-		let finalLogString = self.colorizeLog(log: log, level: level) + "\n"
-    fputs(finalLogString, destinationFile)
-  }
-  
 }
 
 // MARK: - Color management extension
