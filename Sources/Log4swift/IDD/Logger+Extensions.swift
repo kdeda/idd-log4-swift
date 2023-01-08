@@ -1,8 +1,9 @@
 //
-//  File.swift
-//  
+//  Logger+Extensions.swift
+//  Log4Swift
 //
 //  Created by Klajd Deda on 3/2/21.
+//  Copyright (C) 2017-2023 id-design, inc. All rights reserved.
 //
 
 import Foundation

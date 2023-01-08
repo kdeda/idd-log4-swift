@@ -1,14 +1,17 @@
 //
 //  Log4swiftConfig.swift
-//  Tides
+//  Log4Swift
 //
 //  Created by Klajd Deda on 4/20/17.
-//  Copyright © 2017 Klajd Deda. All rights reserved.
+//  Copyright (C) 2017-2023 id-design, inc. All rights reserved.
 //
 
 import Foundation
 
 public class Log4swiftConfig: NSObject {
+    /**
+     This should be called at the very start of teh application.
+     */
     public static func configureLogs(defaultLogFile aDefaultLogFile: String?, lock theLock: String) {
         let processIdentifier = ProcessInfo.processInfo.processIdentifier
         let sharedFactory = LoggerFactory.sharedInstance
@@ -52,6 +55,9 @@ public class Log4swiftConfig: NSObject {
 }
 
 public class Log4swift: NSObject {
+    /**
+     This is very fast, 3 seconds for 1 million look ups
+     */
     static public func getLogger(_ identifier: String) -> Logger {
         let rv = Logger.getLogger(identifier)
         let level: String = {
@@ -72,7 +78,7 @@ public class Log4swift: NSObject {
                 // Foobar<Foo> type class names
                 //
                 let tokens = identifier.components(separatedBy: "<")
-                
+
                 if tokens.count > 1 {
                     derivedShortClassName = tokens[0]
                     return UserDefaults.standard.string(forKey: derivedShortClassName) ?? ""
@@ -80,7 +86,7 @@ public class Log4swift: NSObject {
             }
             return ""
         }()
-        
+
         if level == "D" {
             rv.thresholdLevel = LogLevel.Debug
         } else if level == "T" {
