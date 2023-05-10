@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "idd-log4-swift",
     platforms: [
-        .iOS(.v15),
+        .iOS(.v13),
         .macOS(.v11)
     ],
     products: [

@@ -83,7 +83,7 @@ public final class Log4swift {
             }()
             
             let fileURL = home.appendingPathComponent("Library/Logs").appendingPathComponent(appName).appendingPathExtension("log")
-            let fileLogger = try? FileLogging(to: fileURL)
+            let fileLogger = try? FileLogger(to: fileURL)
             
             LoggingSystem.bootstrap { label in
                 FileLogHandler(label: label, fileLogger: fileLogger!)
