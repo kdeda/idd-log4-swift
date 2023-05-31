@@ -6,8 +6,8 @@
 //  Copyright (C) 1997-2023 id-design, inc. All rights reserved.
 //
 
-import Logging
 import Foundation
+import Logging
 
 public extension Logger {
     var isDebug: Bool {

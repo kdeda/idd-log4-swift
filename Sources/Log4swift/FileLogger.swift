@@ -6,8 +6,8 @@
 //  Copyright (C) 1997-2023 id-design, inc. All rights reserved.
 //
 
-import Logging
 import Foundation
+import Logging
 
 // Adapted from https://nshipster.com/textoutputstream/
 fileprivate struct FileHandlerOutputStream: TextOutputStream {
