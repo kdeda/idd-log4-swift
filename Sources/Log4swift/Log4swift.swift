@@ -22,38 +22,36 @@ public final class Log4swift {
             return rv
         }
 
-        let level: String = {
-            if let rv = UserDefaults.standard.string(forKey: identifier) {
-                return rv
-            }
-            // Foobar.Foo class names
+        let logInfo: (logID: String, level: String) = {
+            // full class name
+            // ie: `IDDList.IDDList<IDDFolderScan.NodeEntry>`
             //
-            var derivedShortClassName = "UnknownClassName"
-            let tokens = identifier.components(separatedBy: ".")
+            if let rv = UserDefaults.standard.string(forKey: identifier) {
+                return (logID: identifier, level: rv)
+            }
+            
+            // try to reme all crap after the long name
+            // ie: `IDDList.IDDList<IDDFolderScan.NodeEntry>`
+            // should become 'IDDList.IDDList'
+            //
+            let tokens = identifier.components(separatedBy: "<")
 
-            if tokens.count > 1 {
-                // Foobar.Foo type class names
-                //
-                derivedShortClassName = tokens[tokens.count - 1]
-                return UserDefaults.standard.string(forKey: derivedShortClassName) ?? ""
-            } else {
-                // Foobar<Foo> type class names
-                //
-                let tokens = identifier.components(separatedBy: "<")
-
-                if tokens.count > 1 {
-                    derivedShortClassName = tokens[0]
-                    return UserDefaults.standard.string(forKey: derivedShortClassName) ?? ""
+            if tokens.count > 0 {
+                let shortcClassName = tokens[0]
+                if let rv = UserDefaults.standard.string(forKey: shortcClassName) {
+                    return (logID: shortcClassName, level: rv)
                 }
             }
-            return ""
+            return (logID: identifier, level: "")
         }()
 
         var logger = Logger(label: identifier)
-        if level == "D" {
+        if logInfo.level == "D" {
             logger.logLevel = .debug
-        } else if level == "T" {
+        } else if logInfo.level == "T" {
             logger.logLevel = .trace
+        } else {
+            logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'")
         }
 
         loggers[identifier] = logger
