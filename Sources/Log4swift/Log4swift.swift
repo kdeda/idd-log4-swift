@@ -13,31 +13,47 @@ public final class Log4swift {
     private static let shared = Log4swift()
     private var loggers = [String: Logger]()
     private let workerLock = DispatchSemaphore(value: 1)
+    private var printThisOnce = true
 
+    /**
+     The log identifier or logID should be the name of the type
+     following Swift name spaces
+     ie: `IDDList.IDDList<IDDFolderScan.NodeEntry>`
+     or: `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>`
+     or: `WhatSize.DetailToolbarItem.State`
+
+     When configuring for a generic type like `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>` you have
+     2 options to set the log level
+     1. -`Swift.AsyncStream` D, for all inner types
+     2. -`Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>` D, for just this inner type
+     */
     private func getLogger(_ identifier: String) -> Logger {
         workerLock.wait()
         defer { workerLock.signal() }
 
         if let rv = loggers[identifier] {
+            // we will get here for subsequent calls so the over head of this func is O(1)
             return rv
         }
 
+        // DEDA DEBUG
+        // fully qualified name space debuging ...
+        //   if identifier == "Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>" {
+        //       NSLog("Using 'I', info level for: '\(identifier)'")
+        //   }
         let logInfo: (logID: String, level: String) = {
-            // full class name
-            // ie: `IDDList.IDDList<IDDFolderScan.NodeEntry>`
-            //
             if let rv = UserDefaults.standard.string(forKey: identifier) {
+                // the exact full name space
+                // ie: `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>`
                 return (logID: identifier, level: rv)
             }
             
-            // try to reme all crap after the long name
-            // ie: `IDDList.IDDList<IDDFolderScan.NodeEntry>`
-            // should become 'IDDList.IDDList'
-            //
             let tokens = identifier.components(separatedBy: "<")
 
             if tokens.count > 0 {
                 let shortcClassName = tokens[0]
+                // the generic name
+                // ie: `Swift.AsyncStream`
                 if let rv = UserDefaults.standard.string(forKey: shortcClassName) {
                     return (logID: shortcClassName, level: rv)
                 }
@@ -51,7 +67,11 @@ public final class Log4swift {
         } else if logInfo.level == "T" {
             logger.logLevel = .trace
         } else {
-            logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'")
+            if printThisOnce {
+                // print this once
+                logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'")
+                printThisOnce = false
+            }
         }
 
         loggers[identifier] = logger
