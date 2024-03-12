@@ -26,6 +26,8 @@ public final class Log4swift {
      2 options to set the log level
      1. -`Swift.AsyncStream` D, for all inner types
      2. -`Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>` D, for just this inner type
+
+     This is very fast, 3 seconds for 1 million look ups
      */
     private func getLogger(_ identifier: String) -> Logger {
         workerLock.wait()
@@ -110,12 +112,18 @@ public final class Log4swift {
     }
     
     /**
-     This is very fast, 3 seconds for 1 million look ups
+     Please define the names here with full name space.
+     ie: 'IDDSwift.Process'
      */
     static public subscript(identifier: String) -> Logger {
         shared.getLogger(identifier)
     }
 
+    /**
+     Return the full name of the type the first chunk is the name space
+     ie: 'Foundation.URL'
+     ie: 'Swift.Array<WhatSize.SBItem>'
+     */
     static public subscript<T>(type: T.Type) -> Logger {
         shared.getLogger(String(reflecting: type))
     }

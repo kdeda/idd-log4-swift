@@ -63,7 +63,7 @@ public struct ConsoleHandler: LogHandler {
         }()
         let threadId = String(currentThreadId(), radix: 16, uppercase: false)
 
-        let message = "\(timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(levelString) \(threadId)] <\(self.label) \(function)>   \(message)\n"
+        let message = "\(timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(levelString) \(threadId)] \(self.label).\(function)   \(message)\n"
         fputs(message, stdout)
 
         // self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)

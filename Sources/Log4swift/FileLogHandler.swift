@@ -66,7 +66,7 @@ public struct FileLogHandler: LogHandler {
         }()
         let threadId = String(currentThreadId(), radix: 16, uppercase: false)
         
-        let message = "\(timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(levelString) \(threadId)] <\(self.label) \(function)>   \(message)\n"
+        let message = "\(timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(levelString) \(threadId)] \(self.label).\(function)   \(message)\n"
         fileLogger.write(message)
         // let prettyMetadata = metadata?.isEmpty ?? true
         //     ? self.prettyMetadata
