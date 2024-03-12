@@ -3,25 +3,11 @@
 //  Log4swift
 //
 //  Created by Klajd Deda on 3/9/23.
-//  Copyright (C) 1997-2023 id-design, inc. All rights reserved.
+//  Copyright (C) 1997-2024 id-design, inc. All rights reserved.
 //
 
 import Foundation
 import Logging
-
-internal func currentThreadId() -> UInt64 {
-    var threadId: UInt64 = 0
-
-#if os(Linux)
-    threadId = UInt64(pthread_self() as UInt)
-#else
-    if (pthread_threadid_np(nil, &threadId) != 0) {
-        return threadId
-    }
-#endif
-
-    return UInt64(threadId)
-}
 
 public struct ConsoleHandler: LogHandler {
     public var metadata: Logging.Logger.Metadata = .init()
@@ -37,11 +23,6 @@ public struct ConsoleHandler: LogHandler {
     }
 
     private var label: String
-    private var dateFormatter: DateFormatter = {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        return dateFormatter
-    }()
     public func log(level: Logging.Logger.Level,
                     message: Logging.Logger.Message,
                     metadata: Logging.Logger.Metadata?,
@@ -49,21 +30,7 @@ public struct ConsoleHandler: LogHandler {
                     file: String,
                     function: String,
                     line: UInt) {
-        let timeStamp = dateFormatter.string(from: Date())
-        let levelString: String = {
-            switch level {
-            case .trace: return "T"
-            case .debug: return "D"
-            case .info: return "I"
-            case .notice: return "N"
-            case .warning: return "W"
-            case .error: return "E"
-            case .critical: return "C"
-            }
-        }()
-        let threadId = String(currentThreadId(), radix: 16, uppercase: false)
-
-        let message = "\(timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(levelString) \(threadId)] <\(self.label) \(function)>   \(message)\n"
+        let message = "\(Date.timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(level.levelString) \(Thread.threadId)] \(self.label).\(function)   \(message)\n"
         fputs(message, stdout)
 
         // self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)

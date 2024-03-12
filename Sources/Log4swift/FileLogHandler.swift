@@ -3,7 +3,7 @@
 //  Log4swift
 //
 //  Created by Klajd Deda on 5/10/23.
-//  Copyright (C) 1997-2023 id-design, inc. All rights reserved.
+//  Copyright (C) 1997-2024 id-design, inc. All rights reserved.
 //
 
 import Foundation
@@ -14,7 +14,7 @@ import Logging
 /// `FileLogHandler` is a simple implementation of `LogHandler` for directing
 /// `Logger` output to a local file. Appends log output to this file, even across constructor calls.
 public struct FileLogHandler: LogHandler {
-    private let fileLogger: FileLogger
+    private let fileLogConfig: FileLogConfig
     private var label: String
     
     public var logLevel: Logger.Level = .info
@@ -35,9 +35,9 @@ public struct FileLogHandler: LogHandler {
         }
     }
     
-    public init(label: String, fileLogger: FileLogger) {
+    public init(label: String, fileLogConfig: FileLogConfig) {
         self.label = label
-        self.fileLogger = fileLogger
+        self.fileLogConfig = fileLogConfig
     }
     
     //    public init(label: String, localFile url: URL) throws {
@@ -52,22 +52,10 @@ public struct FileLogHandler: LogHandler {
                     file: String,
                     function: String,
                     line: UInt) {
-        let timeStamp = dateFormatter.string(from: Date())
-        let levelString: String = {
-            switch level {
-            case .trace: return "T"
-            case .debug: return "D"
-            case .info: return "I"
-            case .notice: return "N"
-            case .warning: return "W"
-            case .error: return "E"
-            case .critical: return "C"
-            }
-        }()
-        let threadId = String(currentThreadId(), radix: 16, uppercase: false)
-        
-        let message = "\(timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(levelString) \(threadId)] <\(self.label) \(function)>   \(message)\n"
-        fileLogger.write(message)
+        let message = "\(Date.timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(level.levelString) \(Thread.threadId)] \(self.label).\(function)   \(message)\n"
+
+        fileLogConfig.write(message)
+        // fileLogger.write(message)
         // let prettyMetadata = metadata?.isEmpty ?? true
         //     ? self.prettyMetadata
         //     : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
@@ -84,15 +72,16 @@ public struct FileLogHandler: LogHandler {
         return dateFormatter
     }()
     
-    private func timestamp() -> String {
-        var buffer = [Int8](repeating: 0, count: 255)
-        var timestamp = time(nil)
-        let localTime = localtime(&timestamp)
-        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
-        return buffer.withUnsafeBufferPointer {
-            $0.withMemoryRebound(to: CChar.self) {
-                String(cString: $0.baseAddress!)
-            }
-        }
-    }
+    //    private func timestamp() -> String {
+    //        var buffer = [Int8](repeating: 0, count: 255)
+    //        var timestamp = time(nil)
+    //        let localTime = localtime(&timestamp)
+    //        
+    //        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
+    //        return buffer.withUnsafeBufferPointer {
+    //            $0.withMemoryRebound(to: CChar.self) {
+    //                String(cString: $0.baseAddress!)
+    //            }
+    //        }
+    //    }
 }
