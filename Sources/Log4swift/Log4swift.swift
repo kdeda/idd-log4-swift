@@ -69,7 +69,7 @@ public final class Log4swift {
         } else if logInfo.level == "T" {
             logger.logLevel = .trace
         } else {
-            if printThisOnce {
+            if printThisOnce && !logInfo.logID.isEmpty {
                 // print this once
                 logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'")
                 printThisOnce = false
@@ -94,20 +94,27 @@ public final class Log4swift {
                 ConsoleHandler(label: label)
             }
         } else {
+#if os(iOS)
+            LoggingSystem.bootstrap { label in
+                LoggingOSLog(label: label)
+            }
+#else
+            // assuming macOS
             let home: URL = {
                 let uid = getuid()
                 guard uid != 0
                 else { return URL.init(fileURLWithPath: "/") }
-                
+
                 return URL.init(fileURLWithPath: NSHomeDirectory())
             }()
-            
+
             let fileURL = home.appendingPathComponent("Library/Logs").appendingPathComponent(appName).appendingPathExtension("log")
             let fileLogger = try? FileLogger(to: fileURL)
-            
+
             LoggingSystem.bootstrap { label in
                 FileLogHandler(label: label, fileLogger: fileLogger!)
             }
+#endif
         }
     }
     
