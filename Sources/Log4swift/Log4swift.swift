@@ -11,6 +11,7 @@ import Logging
 
 public final class Log4swift {
     private static let shared = Log4swift()
+    private static var fileLogger: FileLogger?
     private var loggers = [String: Logger]()
     private let workerLock = DispatchSemaphore(value: 1)
     private var printThisOnce = true
@@ -109,7 +110,7 @@ public final class Log4swift {
             }()
 
             let fileURL = home.appendingPathComponent("Library/Logs").appendingPathComponent(appName).appendingPathExtension("log")
-            let fileLogger = try? FileLogger(to: fileURL)
+            self.fileLogger = try? FileLogger(to: fileURL)
 
             LoggingSystem.bootstrap { label in
                 FileLogHandler(label: label, fileLogger: fileLogger!)
@@ -134,4 +135,16 @@ public final class Log4swift {
     static public subscript<T>(type: T.Type) -> Logger {
         shared.getLogger(String(reflecting: type))
     }
+
+    /**
+     Convenience to dump just the message.
+     */
+    public static func log(_ message: String) {
+        if UserDefaults.standard.bool(forKey: "standardLog") {
+            fputs(message, stdout)
+        } else {
+            fileLogger?.write(message)
+        }
+    }
+
 }
