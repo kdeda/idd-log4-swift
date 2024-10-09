@@ -8,19 +8,21 @@
 
 import Foundation
 import Logging
-
-internal func currentThreadId() -> UInt64 {
-    var threadId: UInt64 = 0
-
-#if os(Linux)
-    threadId = UInt64(pthread_self() as UInt)
-#else
-    if (pthread_threadid_np(nil, &threadId) != 0) {
-        return threadId
-    }
+#if os(Windows)
+import WinSDK
 #endif
 
-    return UInt64(threadId)
+/**
+ from swift-log/Tests/LoggingTests/TestLogger.swift
+ */
+internal func currentThreadId() -> UInt64 {
+#if canImport(Darwin)
+    return UInt64(pthread_mach_thread_np(pthread_self()))
+#elseif os(Windows)
+    return UInt64(GetCurrentThreadId())
+#else
+    return UInt64(pthread_self() as UInt)
+#endif
 }
 
 extension Thread {

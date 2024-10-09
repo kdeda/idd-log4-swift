@@ -79,7 +79,7 @@ public final class FileLogConfig {
      This will be combined
      ${logRootURL}/${suffix}\_${date:\_yyyy\_mm\_ddd}\_${prefix}.log
      */
-    private var fileURL: URL
+    public var fileURL: URL
     private let encoding: String.Encoding = .utf8
 
     /**

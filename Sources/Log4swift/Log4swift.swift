@@ -86,6 +86,20 @@ public final class Log4swift {
     }()
 
     /**
+     Say we are using a new file.
+     Reset all these cached loggers
+     */
+    internal func resetLoggers() {
+        workerLock.wait()
+        defer { workerLock.signal() }
+
+        loggers.removeAll()
+    }
+
+
+    // MARK: - Public -
+
+    /**
      This code supposed to support macOS, iOS and linux (close to macOS)
      If you define the -standardLog true at the start of your application, all
      log lessages will go to the Console (under stdout).
@@ -137,17 +151,6 @@ public final class Log4swift {
             return FileLogHandler(label: label, fileLogConfig: fileLogConfig)
         }
 #endif
-    }
-
-    /**
-     Say we are using a new file.
-     Reset all these cached loggers
-     */
-    internal func resetLoggers() {
-        workerLock.wait()
-        defer { workerLock.signal() }
-
-        loggers.removeAll()
     }
 
     /**
