@@ -39,12 +39,7 @@ public struct FileLogHandler: LogHandler {
         self.label = label
         self.fileLogConfig = fileLogConfig
     }
-    
-    //    public init(label: String, localFile url: URL) throws {
-    //        self.label = label
-    //        self.stream = try FileHandlerOutputStream(localFile: url)
-    //    }
-    
+
     public func log(level: Logger.Level,
                     message: Logger.Message,
                     metadata: Logger.Metadata?,
@@ -55,11 +50,6 @@ public struct FileLogHandler: LogHandler {
         let message = "\(Date.timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(level.levelString) \(Thread.threadId)] \(self.label).\(function)   \(message)\n"
 
         fileLogConfig.write(message)
-        // fileLogger.write(message)
-        // let prettyMetadata = metadata?.isEmpty ?? true
-        //     ? self.prettyMetadata
-        //     : self.prettify(self.metadata.merging(metadata!, uniquingKeysWith: { _, new in new }))
-        // stream.write("\(self.timestamp()) \(level) \(self.label) :\(prettyMetadata.map { " \($0)" } ?? "") \(message)\n")
     }
     
     private func prettify(_ metadata: Logger.Metadata) -> String? {
@@ -71,17 +61,4 @@ public struct FileLogHandler: LogHandler {
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
         return dateFormatter
     }()
-    
-    //    private func timestamp() -> String {
-    //        var buffer = [Int8](repeating: 0, count: 255)
-    //        var timestamp = time(nil)
-    //        let localTime = localtime(&timestamp)
-    //        
-    //        strftime(&buffer, buffer.count, "%Y-%m-%dT%H:%M:%S%z", localTime)
-    //        return buffer.withUnsafeBufferPointer {
-    //            $0.withMemoryRebound(to: CChar.self) {
-    //                String(cString: $0.baseAddress!)
-    //            }
-    //        }
-    //    }
 }

@@ -106,6 +106,7 @@ public final class FileLogConfig {
 
             // TODO:
             // Not sure i want this
+            // Basically if a file is already there for a given date stamp, it will create 'file_numberofsecond' file
             //
             //  if FileManager.default.fileExists(atPath: fileURL.path) {
             //      /**
@@ -128,6 +129,27 @@ public final class FileLogConfig {
                 guard FileManager.default.createFile(atPath: fileURL.path, contents: nil, attributes: nil)
                 else {
                     throw FileHandlerOutputStream.couldNotCreateFile
+                }
+            }
+            // we said we want to keep a max of daysToKeep
+            // this is the time to purge older files
+            if daysToKeep > 0 {
+                let parent = fileURL.deletingLastPathComponent()
+                let existing = (try? FileManager.default.contentsOfDirectory(at: parent, includingPropertiesForKeys: [])) ?? []
+                let logFiles = existing.filter({
+                    $0.isFileURL
+                    && $0.lastPathComponent.hasPrefix(appPrefix)
+                })
+
+                if logFiles.count > daysToKeep {
+                    // purge
+                    let sorted = logFiles.sorted { lhs, rhs in
+                        lhs.lastPathComponent.lowercased() < rhs.lastPathComponent.lowercased()
+                    }
+                    let old = sorted.prefix(upTo: sorted.count - daysToKeep)
+                    old.forEach { logFileURL in
+                        try? FileManager.default.removeItem(at: logFileURL)
+                    }
                 }
             }
             return try FileHandle(forWritingTo: fileURL)

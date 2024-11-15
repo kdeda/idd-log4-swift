@@ -101,6 +101,8 @@ public final class Log4swift {
 
     /**
      This code supposed to support macOS, iOS and linux (close to macOS)
+
+     Please make sure you call this once, as early as possible, usually at your main()
      If you define the -standardLog true at the start of your application, all
      log lessages will go to the Console (under stdout).
      Otherwise if the app is running in user space they will go to ~/Library/Logs/${appName}.log
@@ -116,6 +118,7 @@ public final class Log4swift {
             LoggingSystem.bootstrap { label in
                 ConsoleHandler(label: label)
             }
+            Self.log("\n")
             return
         }
 #if os(iOS)
@@ -142,6 +145,7 @@ public final class Log4swift {
             LoggingSystem.bootstrap { label in
                 ConsoleHandler(label: label)
             }
+            Self.log("\n")
             return
         }
 
@@ -150,6 +154,7 @@ public final class Log4swift {
         LoggingSystem.bootstrap { label in
             return FileLogHandler(label: label, fileLogConfig: fileLogConfig)
         }
+        Self.log("\n")
 #endif
     }
 
@@ -171,7 +176,7 @@ public final class Log4swift {
     }
 
     /**
-     Convenience to dump just the message.
+     Convenience to dump just the message verbatim, no cooking in anyway.
      */
     public static func log(_ message: String) {
         if UserDefaults.standard.bool(forKey: "standardLog") {
