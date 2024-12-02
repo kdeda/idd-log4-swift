@@ -25,9 +25,43 @@ internal func currentThreadId() -> UInt64 {
 #endif
 }
 
+fileprivate extension String {
+    func leftPadding(to length: Int, withPad character: Character) -> String {
+        let stringLength = self.count
+
+        if stringLength < length {
+            return String(repeatElement(character, count: length - stringLength)) + self
+        }
+        return String(self.suffix(length))
+    }
+
+    // the character will be space
+    //
+    func leftPadding(to length: Int) -> String {
+        return self.leftPadding(to: length, withPad: Character(" "))
+    }
+}
+
 extension Thread {
+    private static var threadIDByIndex: [UInt64: Int] = [:]
+
     internal static var threadId: String {
-        String(currentThreadId(), radix: 16, uppercase: false)
+        let threadID = currentThreadId()
+        let index = {
+            if let index = threadIDByIndex[threadID] {
+                return index
+            } else {
+                let index = threadIDByIndex.count
+                threadIDByIndex[threadID] = index
+                return index
+            }
+        }()
+
+        let rawString = (index == 0)
+        ? "main"
+        : "t(\(index))"
+
+        return rawString.leftPadding(to: 6, withPad: " ")
     }
 }
 
