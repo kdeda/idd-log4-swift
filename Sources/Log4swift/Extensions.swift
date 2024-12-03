@@ -44,24 +44,34 @@ fileprivate extension String {
 
 extension Thread {
     private static var threadIDByIndex: [UInt64: Int] = [:]
+    private static var lock = NSRecursiveLock()
 
-    internal static var threadId: String {
+    /**
+     we can sneak upwards to 9999 thread count here
+     if we get above that, we could mod it by 9999
+     feel free to modify this to fit more digits, but the log lines will end up with mostly empty space
+     */
+    internal static var threadIdWith4Digits: String {
+        let clampTo4Digits = 9999 // if you need, add one more 9 to add more digit
+
         let threadID = currentThreadId()
         let index = {
-            if let index = threadIDByIndex[threadID] {
-                return index
-            } else {
-                let index = threadIDByIndex.count
-                threadIDByIndex[threadID] = index
-                return index
+            lock.withLock {
+                if let index = threadIDByIndex[threadID] {
+                    return index
+                } else {
+                    let index = threadIDByIndex.count
+                    threadIDByIndex[threadID] = index
+                    return index
+                }
             }
         }()
 
         let rawString = (index == 0)
         ? "main"
-        : "t(\(index))"
+        : "th " + "\(index % clampTo4Digits)"
 
-        return rawString.leftPadding(to: 6, withPad: " ")
+        return rawString
     }
 }
 
