@@ -11,22 +11,37 @@ import Logging
 
 public final class Log4swift {
     internal static let shared = Log4swift()
+    /**
+     Process /Users/kdeda/Developer/build/Debug/com.id-design.v8.whatsizehelper will return
+     com_id_design_v8_whatsizehelper
+     */
+    private static let processName = {
+        ProcessInfo.processInfo.processName
+            .replacingOccurrences(of: ".", with: "_")
+            .replacingOccurrences(of: "-", with: "_")
+    }()
     private var loggers = [String: Logger]()
     private var fileLogConfig: FileLogConfig?
     private let workerLock = DispatchSemaphore(value: 1)
     private var printThisOnce = true
 
     /**
+     Return a Logger for a given identifier.
+
      The log identifier or logID should be the name of the type
-     following Swift name spaces
-     ie: `IDDList.IDDList<IDDFolderScan.NodeEntry>`
-     or: `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>`
-     or: `WhatSize.DetailToolbarItem.State`
+     following Swift name spaces, example
+     1. `IDDList.IDDList<IDDFolderScan.NodeEntry>`
+     2. `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>`
+     3. `WhatSize.DetailToolbarItem.State`
+
+     To make the logs more concise we are going to remove the ProcessInfo.processInfo.processName
+     from the identifier.
+     eg: `WhatSize.DetailToolbarItem.State` would be converted to `DetailToolbarItem.State`
 
      When configuring for a generic type like `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>` you have
      2 options to set the log level
-     1. -`Swift.AsyncStream` D, for all inner types
-     2. -`Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>` D, for just this inner type
+     1. `Swift.AsyncStream` D, for all inner types
+     2. `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>` D, for just this inner type
 
      This is very fast, 3 seconds for 1 million look ups
      */
@@ -172,7 +187,17 @@ public final class Log4swift {
      ie: 'Swift.Array<WhatSize.SBItem>'
      */
     static public subscript<T>(type: T.Type) -> Logger {
-        shared.getLogger(String(reflecting: type))
+        var identifier = String(reflecting: type)
+        var tokens = identifier.components(separatedBy: ".")
+
+        if !tokens.isEmpty,
+           tokens[0] == Self.processName
+        {
+            // tokens[0] = "APP"
+            tokens.remove(at: 0)
+            identifier = tokens.joined(separator: ".")
+        }
+        return shared.getLogger(identifier)
     }
 
     /**

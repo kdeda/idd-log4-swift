@@ -37,4 +37,27 @@ extension Logging.Logger {
     public func error(function: String, _ message: @autoclosure () -> Logger.Message) {
         self.log(level: .error, message(), metadata: nil, source: nil, file: #file, function: function, line: #line)
     }
+
+    @inlinable
+    public func dash(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        let stringMessage = message().description
+        let dashMessage = {
+            Logger.Message.init(stringLiteral: String(repeating: "-", count: stringMessage.count))
+        }
+        self.log(level: .info, dashMessage(), metadata: nil, source: nil, file: #file, function: function, line: #line)
+    }
+
+    @inlinable
+    /**
+     Convenience to log the function name, usually inside a client.
+     */
+    public func dash(function: String, _ message: @autoclosure () -> Logger.Message) {
+        self.dash(message(), metadata: nil, file: #file, function: function, line: #line)
+    }
 }

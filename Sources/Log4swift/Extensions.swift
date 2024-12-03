@@ -25,6 +25,8 @@ internal func currentThreadId() -> UInt64 {
 #endif
 }
 
+// MARK: - String (Private) -
+
 fileprivate extension String {
     func leftPadding(to length: Int, withPad character: Character) -> String {
         let stringLength = self.count
@@ -42,28 +44,43 @@ fileprivate extension String {
     }
 }
 
+// MARK: - Thread (Internal) -
+
 extension Thread {
     private static var threadIDByIndex: [UInt64: Int] = [:]
+    private static var lock = NSRecursiveLock()
 
-    internal static var threadId: String {
+    /**
+     we can sneak upwards to 9999 thread count here
+     if we get above that, we would mod it by 9999
+     having accurate thread index ain't much of a big deal deal for this
+     feel free to modify this to fit more digits, but the log lines will end up with mostly empty space
+     */
+    internal static var threadIdWith4Digits: String {
+        let clampedDigits = 9999 // if you need, add one more 9 to add more digit
+
         let threadID = currentThreadId()
         let index = {
-            if let index = threadIDByIndex[threadID] {
-                return index
-            } else {
-                let index = threadIDByIndex.count
-                threadIDByIndex[threadID] = index
-                return index
+            lock.withLock {
+                if let index = threadIDByIndex[threadID] {
+                    return index
+                } else {
+                    let index = threadIDByIndex.count
+                    threadIDByIndex[threadID] = index
+                    return index
+                }
             }
         }()
 
         let rawString = (index == 0)
         ? "main"
-        : "t(\(index))"
+        : "th." + "\(index  % clampedDigits)"
 
-        return rawString.leftPadding(to: 6, withPad: " ")
+        return rawString
     }
 }
+
+// MARK: - Date (Internal) -
 
 extension Date {
     internal static var dateFormatter: DateFormatter = {
@@ -77,6 +94,8 @@ extension Date {
     }
 }
 
+// MARK: - Logging.Logger.Level (Internal) -
+
 extension Logger.Level {
     internal var levelString: String {
         switch self {
@@ -89,4 +108,10 @@ extension Logger.Level {
         case .critical: return "C"
         }
     }
+}
+
+// MARK: - ProcessInfo (Internal) -
+
+extension ProcessInfo {
+    internal static var isRunningInPreviewMode = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != nil
 }

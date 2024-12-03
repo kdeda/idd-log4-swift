@@ -30,10 +30,23 @@ public struct ConsoleHandler: LogHandler {
                     file: String,
                     function: String,
                     line: UInt) {
-        let message = "\(Date.timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(level.levelString) \(Thread.threadId)] \(self.label).\(function)   \(message)\n"
-        fputs(message, stdout)
+        // by adding | as column separators we make the logs easier to visually parse.
+        // by trying to keep the basic columns of the same width it helps a bit more
+        let infoAndThread = "<\(level.levelString) \(Thread.threadIdWith4Digits)>"
+        // let infoAndThread = infoAndThread_.padding(toLength: 10, withPad: " ", startingAt: 0)
+        let message = {
+            if self.label.isEmpty {
+                "\(Date.timeStamp) | <\(ProcessInfo.processInfo.processIdentifier)> | \(infoAndThread) | \(message)\n"
+            } else {
+                "\(Date.timeStamp) | <\(ProcessInfo.processInfo.processIdentifier)> | \(infoAndThread) | \(self.label).\(function)  |  \(message)\n"
+            }
+        }()
 
-        // self.log(level: level, message: message, metadata: metadata, file: file, function: function, line: line)
+        if ProcessInfo.isRunningInPreviewMode {
+            print(message, terminator: "")
+        } else {
+            fputs(message, stdout)
+        }
     }
 
     public init(label: String) {
