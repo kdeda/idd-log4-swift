@@ -44,16 +44,25 @@ public struct LoggingOSLog: LogHandler {
         }
 
 #if DEBUG
-        // in debug mode for convenience we stuff all details in the message
-        // in release mode apple's os_log does stuff these magically
-        // if you use Console.app to see logs you will see ThreadID, PID, Date & Time as columns
-        //
-        let message = "\(Date.timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(level.levelString) \(Thread.threadId)] \(self.label).\(function)   \(message)\n"
-        // let message = "\(timeStamp) <\(ProcessInfo.processInfo.processIdentifier)> [\(levelString) \(threadId)] \(self.label).\(function)   \(message)\n"
+        // by adding | as column separators we make the logs easier to visually parse.
+        // by trying to keep the basic columns of the same width it helps a bit more
+        let infoAndThread = "<\(level.levelString) \(Thread.threadIdWith4Digits)>"
+        // let infoAndThread = infoAndThread_.padding(toLength: 10, withPad: " ", startingAt: 0)
+        let message = {
+            if self.label.isEmpty {
+                "\(Date.timeStamp) | <\(ProcessInfo.processInfo.processIdentifier)> | \(infoAndThread) | \(message)\n"
+            } else {
+                "\(Date.timeStamp) | <\(ProcessInfo.processInfo.processIdentifier)> | \(infoAndThread) | \(self.label).\(function)  |  \(message)\n"
+            }
+        }()
 #else
         let message = formedMessage
 #endif
-        os_log("%{public}@", log: self.oslogger, type: OSLogType.from(loggerLevel: level), message as NSString)
+        if ProcessInfo.isRunningInPreviewMode {
+            print(message, terminator: "")
+        } else {
+            os_log("%{public}@", log: self.oslogger, type: OSLogType.from(loggerLevel: level), message as NSString)
+        }
     }
 
     private var prettyMetadata: String?
