@@ -48,7 +48,8 @@ extension Logging.Logger {
     ) {
         let stringMessage = message().description
         let dashMessage = {
-            Logger.Message.init(stringLiteral: String(repeating: "-", count: stringMessage.count))
+            let maxCount = min(128, stringMessage.count)
+            return Logger.Message.init(stringLiteral: String(repeating: "-", count: maxCount))
         }
         self.log(level: .info, dashMessage(), metadata: nil, source: nil, file: #file, function: function, line: #line)
     }

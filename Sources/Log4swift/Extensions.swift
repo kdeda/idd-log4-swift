@@ -51,13 +51,13 @@ extension Thread {
     private static var lock = NSRecursiveLock()
 
     /**
-     we can sneak upwards to 9999 thread count here
-     if we get above that, we would mod it by 9999
+     we can sneak upwards to 999 thread count here
+     if we get above that, we would mod it by 999
      having accurate thread index ain't much of a big deal deal for this
      feel free to modify this to fit more digits, but the log lines will end up with mostly empty space
      */
-    internal static var threadIdWith4Digits: String {
-        let clampedDigits = 9999 // if you need, add one more 9 to add more digit
+    internal static var threadIdWith3Digits: String {
+        let clampedDigits = 999 // if you need any more digits just add one more 9 to this
 
         let threadID = currentThreadId()
         let index = {

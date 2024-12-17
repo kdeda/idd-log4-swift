@@ -28,7 +28,15 @@ public struct LoggingOSLog: LogHandler {
         self.oslogger = log
     }
 
-    public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {
+    /**
+     Read the ConsoleHandler.log(level:) for more
+     */
+    public func log(level: Logger.Level,
+                    message: Logger.Message,
+                    metadata: Logger.Metadata?,
+                    file: String,
+                    function: String,
+                    line: UInt) {
         var combinedPrettyMetadata = self.prettyMetadata
         if let metadataOverride = metadata, !metadataOverride.isEmpty {
             combinedPrettyMetadata = self.prettify(
@@ -44,10 +52,7 @@ public struct LoggingOSLog: LogHandler {
         }
 
 #if DEBUG
-        // by adding | as column separators we make the logs easier to visually parse.
-        // by trying to keep the basic columns of the same width it helps a bit more
-        let infoAndThread = "<\(level.levelString) \(Thread.threadIdWith4Digits)>"
-        // let infoAndThread = infoAndThread_.padding(toLength: 10, withPad: " ", startingAt: 0)
+        let infoAndThread = "<\(level.levelString) \(Thread.threadIdWith3Digits)>".padding(toLength: 10, withPad: " ", startingAt: 0)
         let message = {
             if self.label.isEmpty {
                 "\(Date.timeStamp) | <\(ProcessInfo.processInfo.processIdentifier)> | \(infoAndThread) | \(message)\n"
