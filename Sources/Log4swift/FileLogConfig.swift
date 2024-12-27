@@ -1,6 +1,6 @@
 //
 //  FileLogConfig.swift
-//  Log4swift
+//  idd-log4-swift
 //
 //  Created by Klajd Deda on 9/30/24.
 //  Copyright (C) 1997-2024 Klajd Deda. All rights reserved.

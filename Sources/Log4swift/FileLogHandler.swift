@@ -1,9 +1,9 @@
 //
 //  FileLogHandler.swift
-//  Log4swift
+//  idd-log4-swift
 //
 //  Created by Klajd Deda on 5/10/23.
-//  Copyright (C) 1997-2024 id-design, inc. All rights reserved.
+//  Copyright (C) 1997-2025 id-design, inc. All rights reserved.
 //
 
 import Foundation
@@ -50,19 +50,12 @@ public struct FileLogHandler: LogHandler {
                     file: String,
                     function: String,
                     line: UInt) {
-        let infoAndThread = "<\(level.levelString) \(Thread.threadIdWith3Digits)>".padding(toLength: 10, withPad: " ", startingAt: 0)
-        let message = {
-            if self.label.isEmpty {
-                "\(Date.timeStamp) | <\(ProcessInfo.processInfo.processIdentifier)> | \(infoAndThread) | \(message)\n"
-            } else {
-                "\(Date.timeStamp) | <\(ProcessInfo.processInfo.processIdentifier)> | \(infoAndThread) | \(self.label).\(function)  |  \(message)\n"
-            }
-        }()
+        let logLine = message.logLine(level: level, label: label, file: file, function: function)
 
         if ProcessInfo.isRunningInPreviewMode {
-            print(message, terminator: "")
+            print(logLine, terminator: "")
         } else {
-            fileLogConfig.write(message)
+            fileLogConfig.write(logLine)
         }
     }
     

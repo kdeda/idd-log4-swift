@@ -1,6 +1,6 @@
 //
 //  LoggingOSLog.swift
-//  Log4swift
+//  idd-log4-swift
 //
 //  Created by Klajd Deda on 5/14/24.
 //  Shamlessly lifted from https://github.com/chrisaljoudi/swift-log-oslog/blob/master/Sources/LoggingOSLog/LoggingOSLog.swift
@@ -52,14 +52,7 @@ public struct LoggingOSLog: LogHandler {
         }
 
 #if DEBUG
-        let infoAndThread = "<\(level.levelString) \(Thread.threadIdWith3Digits)>".padding(toLength: 10, withPad: " ", startingAt: 0)
-        let message = {
-            if self.label.isEmpty {
-                "\(Date.timeStamp) | <\(ProcessInfo.processInfo.processIdentifier)> | \(infoAndThread) | \(message)\n"
-            } else {
-                "\(Date.timeStamp) | <\(ProcessInfo.processInfo.processIdentifier)> | \(infoAndThread) | \(self.label).\(function)  |  \(message)\n"
-            }
-        }()
+        let message = message.logLine(level: level, label: label, file: file, function: function)
 #else
         let message = formedMessage
 #endif

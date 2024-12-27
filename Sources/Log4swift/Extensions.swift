@@ -1,9 +1,9 @@
 //
 //  Extensions.swift
-//  Log4swift
+//  idd-log4-swift
 //
 //  Created by Klajd Deda on 9/14/24.
-//  Copyright (C) 1997-2024 id-design, inc. All rights reserved.
+//  Copyright (C) 1997-2025 id-design, inc. All rights reserved.
 //
 
 import Foundation
@@ -77,20 +77,6 @@ extension Thread {
         : "th." + "\(index  % clampedDigits)"
 
         return rawString
-    }
-}
-
-// MARK: - Date (Internal) -
-
-extension Date {
-    internal static var dateFormatter: DateFormatter = {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        return dateFormatter
-    }()
-
-    internal static var timeStamp: String {
-        dateFormatter.string(from: Date())
     }
 }
 
