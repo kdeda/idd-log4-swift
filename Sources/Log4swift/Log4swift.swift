@@ -38,8 +38,10 @@ public final class Log4swift {
      from the identifier.
      eg: `WhatSize.DetailToolbarItem.State` would be converted to `DetailToolbarItem.State`
 
-     When configuring for a generic type like `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>` you have
-     2 options to set the log level
+     The log level determines what gets printed. By default it is set at I (.info) level, but
+     some times you might want to set it at E (.error) to reduce noise or D (.debug) to see all sort of things.
+     In that case when configuring for a generic type like `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>`
+     you have 2 options to set the log level
      1. `Swift.AsyncStream` D, for all inner types
      2. `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>` D, for just this inner type
 
@@ -84,6 +86,8 @@ public final class Log4swift {
             logger.logLevel = .debug
         } else if logInfo.level == "T" {
             logger.logLevel = .trace
+        } else if logInfo.level == "E" {
+            logger.logLevel = .error
         } else {
             if printThisOnce && !logInfo.logID.isEmpty {
                 // print this once
