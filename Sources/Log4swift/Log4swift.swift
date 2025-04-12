@@ -20,6 +20,19 @@ public final class Log4swift {
             .replacingOccurrences(of: ".", with: "_")
             .replacingOccurrences(of: "-", with: "_")
     }()
+
+    /**
+     When defined it is used as precedence to other levels
+     Cool if you want to see only Errors or want to debug something and make it D
+     */
+    private static let globalLevel: Logger.Level? = {
+        let     level = UserDefaults.standard.string(forKey: "IDDLog") ?? ""
+        if      level == "D" { return .debug}
+        else if level == "T" { return .trace }
+        else if level == "E" { return .error }
+        return .none
+    }()
+
     private var loggers = [String: Logger]()
     private var fileLogConfig: FileLogConfig?
     private let workerLock = DispatchSemaphore(value: 1)
@@ -46,6 +59,12 @@ public final class Log4swift {
      2. `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>` D, for just this inner type
 
      This is very fast, 3 seconds for 1 million look ups
+
+     To make logs more compact
+
+     -IDDLog.callSiteFormat 'functionOnly'
+     -IDDLog.timeStampFormat 'compact'
+     -IDDLog.processIDFormat 'none'
      */
     private func getLogger(_ identifier: String) -> Logger {
         workerLock.wait()
@@ -67,7 +86,7 @@ public final class Log4swift {
                 // ie: `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>`
                 return (logID: identifier, level: rv)
             }
-            
+
             let tokens = identifier.components(separatedBy: "<")
 
             if tokens.count > 0 {
@@ -78,6 +97,7 @@ public final class Log4swift {
                     return (logID: shortcClassName, level: rv)
                 }
             }
+
             return (logID: identifier, level: "")
         }()
 
@@ -96,6 +116,10 @@ public final class Log4swift {
             }
         }
 
+        // if the global is defined and differs it takes precedence
+        if let globalLevel = Self.globalLevel, globalLevel != logger.logLevel {
+            logger.logLevel = globalLevel
+        }
         loggers[identifier] = logger
         return logger
     }
