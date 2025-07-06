@@ -37,6 +37,7 @@ public final class Log4swift {
     private var fileLogConfig: FileLogConfig?
     private let workerLock = DispatchSemaphore(value: 1)
     private var printThisOnce = true
+    private var isConfigured = false
 
     /**
      Return a Logger for a given identifier.
@@ -157,6 +158,14 @@ public final class Log4swift {
      Any extra config has to be done manually.
      */
     static public func configure(fileLogConfig: FileLogConfig? = nil) {
+        guard !shared.isConfigured
+        else {
+            // configuring more than once per app causes deep issues
+            Self.log("already configured\n")
+            return
+        }
+
+        shared.isConfigured = true
         if UserDefaults.standard.bool(forKey: "standardLog") {
             LoggingSystem.bootstrap { label in
                 ConsoleHandler(label: label)
