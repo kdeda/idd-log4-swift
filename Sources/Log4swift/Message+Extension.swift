@@ -34,6 +34,7 @@ extension Date {
         } else {
             dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
         }
+        dateFormatter.locale = Locale.init(identifier: "en_US_POSIX")
         return dateFormatter
     }()
 

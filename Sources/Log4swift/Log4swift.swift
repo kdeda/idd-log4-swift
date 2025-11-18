@@ -211,6 +211,24 @@ public final class Log4swift {
     }
 
     /**
+     Will set the following as arguments to avoid thembeing persisted
+     -IDDLog.timeStampFormat compact
+     -IDDLog.callSiteFormat functionOnly
+     -IDDLog.processIDFormat none
+     */
+    static public func configureCompactSettings() {
+        // default to standard console
+        var domain = UserDefaults.standard.volatileDomain(forName: "NSArgumentDomain")
+
+        // domain["standardLog"] = "true"
+        domain["IDDLog.timeStampFormat"] = "compact"
+        domain["IDDLog.callSiteFormat"] = "functionOnly"
+        domain["IDDLog.processIDFormat"] = "none"
+
+        UserDefaults.standard.setVolatileDomain(domain, forName: "NSArgumentDomain")
+    }
+
+    /**
      Please define the names here with full name space.
      ie: 'IDDSwift.Process'
      */
@@ -222,10 +240,38 @@ public final class Log4swift {
      Return the full name of the type the first chunk is the name space
      ie: 'Foundation.URL'
      ie: 'Swift.Array<WhatSize.SBItem>'
+
+     To make long generic names more manageable such as this example `IDDPieChart.SlidingView<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<PieChart.MeasuringRootVolumeV2 ...`
+     We will discard all built in SwiftUI types after the first `<` as to finish as `IDDPieChart.SlidingView<MeasuringRootVolumeV2>`
      */
     static public subscript<T>(type: T.Type) -> Logger {
         var identifier = String(reflecting: type)
         var tokens = identifier.components(separatedBy: ".")
+
+//        if identifier.range(of: "SwiftUI") != nil {
+//            let processName = Self.processName + "."
+//            let tokens1 = identifier.components(separatedBy: "<")
+//            let tokens2 = tokens1.map({ $0.components(separatedBy: ", ") }).flatMap({ $0 })
+//            var nonSuiftUI = tokens2
+//                .filter({
+//                    $0.range(of: "SwiftUI") == nil
+//                })
+//                .map {
+//                    if let range = $0.range(of: processName),
+//                        range.lowerBound == $0.startIndex
+//                    {
+//                        return String($0[range.upperBound...])
+//                    }
+//                    return $0
+//                }
+//
+//            if nonSuiftUI.count > 1 {
+//                nonSuiftUI.insert("<", at: 1)
+//                nonSuiftUI.append(">")
+//            }
+//            let foo1 = nonSuiftUI.joined(separator: "")
+//            return shared.getLogger(foo1)
+//        }
 
         if !tokens.isEmpty,
            tokens[0] == Self.processName

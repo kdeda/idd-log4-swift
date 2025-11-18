@@ -65,7 +65,9 @@ public struct FileLogHandler: LogHandler {
     
     private var dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
+        
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+        dateFormatter.locale = Locale.init(identifier: "en_US_POSIX")
         return dateFormatter
     }()
 }
