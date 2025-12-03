@@ -286,7 +286,7 @@ public final class Log4swift {
     /**
      Convenience to dump just the message verbatim, no cooking in anyway.
      */
-    public static func log(_ message: String) {
+    private static func log(_ message: String) {
         if UserDefaults.standard.bool(forKey: "standardLog") {
             fputs(message, stdout)
             return
@@ -300,3 +300,33 @@ public final class Log4swift {
     }
 
 }
+
+public extension Logger {
+    /**
+     It forwards to the .info() implementation which will log to the file or console
+     if UserDefaults.standard.bool(forKey: "standardLog") is present, the .info will also
+     print to the console so stop there, otherwise also print to the stdout
+
+     Basically this call will ensure the message appears on the file and the stdout
+     Comes handy when one wants to provide clues to end users from the context of a cli.
+
+     Since the full message is also logged to the file we dont bother with the meta data when printing to the stdout
+     */
+    func console(
+        _ message: @autoclosure () -> Logger.Message,
+        metadata: @autoclosure () -> Logger.Metadata? = nil,
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        self.info(message(), metadata: metadata(), source: nil, file: file, function: function, line: line)
+
+        guard !UserDefaults.standard.bool(forKey: "standardLog")
+        else { return } // do not bother, the .info will also print to stdout
+
+        // let logLine = message().logLine(level: Level.info, label: label, file: file, function: function)
+        let logLine = "\(message())\n"
+        fputs(logLine, stdout)
+    }
+}
+
