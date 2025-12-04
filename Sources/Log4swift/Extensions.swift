@@ -47,8 +47,9 @@ fileprivate extension String {
 // MARK: - Thread (Internal) -
 
 extension Thread {
-    private static var threadIDByIndex: [UInt64: Int] = [:]
-    private static var lock = NSRecursiveLock()
+    // we use the lock below
+    nonisolated(unsafe) private static var threadIDByIndex: [UInt64: Int] = [:]
+    private static let lock = NSRecursiveLock()
 
     /**
      we can sneak upwards to 999 thread count here
@@ -99,5 +100,5 @@ extension Logger.Level {
 // MARK: - ProcessInfo (Internal) -
 
 extension ProcessInfo {
-    internal static var isRunningInPreviewMode = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != nil
+    internal static let isRunningInPreviewMode = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != nil
 }

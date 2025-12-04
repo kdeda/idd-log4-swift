@@ -57,14 +57,17 @@ fileprivate extension Date {
  We do not want to create any new log entry until the new day starts
  We just ant to roll over the day number
  eg: '2024\_09\_29' -> '2024\_09\_30' -> '2024\_10\_01' etc
+
+ we lock it outselves, using the workerLock
  */
-public final class FileLogConfig {
+public final class FileLogConfig: @unchecked Sendable {
     enum FileHandlerOutputStream: Error {
         case couldNotCreateFile
     }
 
     // eg: /Library/Vapor/ChefTimeServer/logs
     private var logRootURL: URL
+    private let lock = DispatchSemaphore(value: 1)
 
     // eg: 'WhatSize'
     private var prefix: String
@@ -158,6 +161,10 @@ public final class FileLogConfig {
     }
 
     func write(_ string: String) {
+        // we could mutate self so protect us thy semaphore
+        lock.wait()
+        defer { lock.signal() }
+
         if let newConfig = self.newConfig {
             // we are now on the next day and new log files.
             // Log4swift.shared.resetLoggers()
@@ -169,7 +176,11 @@ public final class FileLogConfig {
         }
 
         if let data = string.data(using: encoding) {
-            fileHandle.write(data)
+            // TODO: kdeda
+            // Decemnber 4, 20025
+            // If this fail what do we do, it's got to be really bad
+            // if we fail also we are really deep at this point to take any action we are the log for good sake
+            try? fileHandle.write(contentsOf: data)
         }
     }
 

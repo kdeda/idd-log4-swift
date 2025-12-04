@@ -3,7 +3,7 @@ import Logging
 @testable import Log4swift
 
 final class Log4swiftTests: XCTestCase {
-    static var allTests = [
+    static let allTests = [
         ("testLogFile", testLogFile)
     ]
 

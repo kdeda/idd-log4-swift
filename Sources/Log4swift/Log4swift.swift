@@ -9,7 +9,8 @@
 import Foundation
 import Logging
 
-public final class Log4swift {
+public final class Log4swift: @unchecked Sendable {
+    // we lock it outselves, using the lock
     internal static let shared = Log4swift()
     /**
      Process /Users/kdeda/Developer/build/Debug/com.id-design.v8.whatsizehelper will return
@@ -35,7 +36,7 @@ public final class Log4swift {
 
     private var loggers = [String: Logger]()
     private var fileLogConfig: FileLogConfig?
-    private let workerLock = DispatchSemaphore(value: 1)
+    private let lock = DispatchSemaphore(value: 1)
     private var printThisOnce = true
     private var isConfigured = false
 
@@ -68,8 +69,9 @@ public final class Log4swift {
      -IDDLog.processIDFormat 'none'
      */
     private func getLogger(_ identifier: String) -> Logger {
-        workerLock.wait()
-        defer { workerLock.signal() }
+        // we could mutate self so protect us thy semaphore
+        lock.wait()
+        defer { lock.signal() }
 
         if let rv = loggers[identifier] {
             // we will get here for subsequent calls so the over head of this func is O(1)
@@ -134,8 +136,8 @@ public final class Log4swift {
      Reset all these cached loggers
      */
     internal func resetLoggers() {
-        workerLock.wait()
-        defer { workerLock.signal() }
+        lock.wait()
+        defer { lock.signal() }
 
         loggers.removeAll()
     }
@@ -285,8 +287,10 @@ public final class Log4swift {
 
     /**
      Convenience to dump just the message verbatim, no cooking in anyway.
+     If UserDefaults.standard.bool(forKey: "standardLog") is present, it will print to console
+     otherwise it will use the fileLogConfig
      */
-    private static func log(_ message: String) {
+    public static func log(_ message: String) {
         if UserDefaults.standard.bool(forKey: "standardLog") {
             fputs(message, stdout)
             return
@@ -303,8 +307,8 @@ public final class Log4swift {
 
 public extension Logger {
     /**
-     It forwards to the .info() implementation which will log to the file or console
-     if UserDefaults.standard.bool(forKey: "standardLog") is present, the .info will also
+     It forwards to the .info() implementation which will log to the file or console.
+     If UserDefaults.standard.bool(forKey: "standardLog") is present, the .info will also
      print to the console so stop there, otherwise also print to the stdout
 
      Basically this call will ensure the message appears on the file and the stdout

@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -15,7 +15,7 @@ let package = Package(
             targets: ["Log4swift"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.6.3")
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.7.0")
     ],
     targets: [
         .target(

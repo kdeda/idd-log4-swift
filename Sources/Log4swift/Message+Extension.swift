@@ -18,7 +18,7 @@ extension Date {
      default is 'standard'
      valid entries are 'standard' and 'compact'
      */
-    internal static var timeStampFormat_compact = {
+    internal static let timeStampFormat_compact = {
         let processIDFormat = UserDefaults.standard.string(forKey: "IDDLog.timeStampFormat") ?? "standard"
         if processIDFormat == "compact" {
             return true
@@ -26,7 +26,7 @@ extension Date {
         return false
     }()
 
-    internal static var dateFormatter: DateFormatter = {
+    internal static let dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
 
         if Self.timeStampFormat_compact {
@@ -53,7 +53,7 @@ extension Logging.Logger.Message {
      default is 'standard'
      valid entries are 'standard' and 'none'
      */
-    internal static var processIDFormat_none = {
+    internal static let processIDFormat_none = {
         let processIDFormat = UserDefaults.standard.string(forKey: "IDDLog.processIDFormat") ?? "standard"
         if processIDFormat == "none" {
             return true
@@ -68,7 +68,7 @@ extension Logging.Logger.Message {
      default is 'standard'
      valid entries are 'standard' and 'functionOnly'
      */
-    internal static var callSiteFormat_functionOnly = {
+    internal static let callSiteFormat_functionOnly = {
         let processIDFormat = UserDefaults.standard.string(forKey: "IDDLog.callSiteFormat") ?? "standard"
         if processIDFormat == "functionOnly" {
             return true
