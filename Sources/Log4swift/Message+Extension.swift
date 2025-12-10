@@ -82,47 +82,28 @@ extension Logging.Logger.Message {
         file: String,
         function: String
     ) -> String {
-        var tokens: [String] = []
+        var message = Date.timeStamp
 
-        func appendTimeStamp() {
-            tokens.append(Date.timeStamp)
+        if !Self.processIDFormat_none {
+            message += " | <\(ProcessInfo.processInfo.processIdentifier)>"
         }
+        
+        message += " | <\(level.levelString) \(Thread.threadIdWith3Digits)>".padding(toLength: 10, withPad: " ", startingAt: 0)
 
-        func appendProcessID() {
-            if !Self.processIDFormat_none {
-                tokens.append("<\(ProcessInfo.processInfo.processIdentifier)>")
-            }
-        }
-
-        func appendInfoAndThread() {
-            let infoAndThread = "<\(level.levelString) \(Thread.threadIdWith3Digits)>".padding(toLength: 10, withPad: " ", startingAt: 0)
-            tokens.append(infoAndThread)
-        }
-
-        func appendCallSite() {
-            if !label.isEmpty {
-                if Self.callSiteFormat_functionOnly {
-                    tokens.append(".\(function) ")
-                } else {
-                    tokens.append("\(label).\(function) ")
-                }
-            }
-        }
-
-        func appendMessage() {
-            if !label.isEmpty {
-                tokens.append(" \(self)\n")
+        if !label.isEmpty {
+            if Self.callSiteFormat_functionOnly {
+                message += " | .\(function) "
             } else {
-                tokens.append("\(self)\n")
+                message += " | \(label).\(function) "
             }
         }
-
-        appendTimeStamp()
-        appendProcessID()
-        appendInfoAndThread()
-        appendCallSite()
-        appendMessage()
-
-        return tokens.joined(separator: " | ")
+        
+        if !label.isEmpty {
+            message += " |  \(self)\n" // extra space
+        } else {
+            message += " | \(self)\n"
+        }
+        
+        return message
     }
 }

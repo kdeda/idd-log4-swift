@@ -35,8 +35,9 @@ public final class Log4swift: @unchecked Sendable {
     }()
 
     private var loggers = [String: Logger]()
+    private var classIDs: [ObjectIdentifier: String] = [:]
     private var fileLogConfig: FileLogConfig?
-    private let lock = DispatchSemaphore(value: 1)
+    private var lock = os_unfair_lock()
     private var printThisOnce = true
     private var isConfigured = false
 
@@ -70,8 +71,8 @@ public final class Log4swift: @unchecked Sendable {
      */
     private func getLogger(_ identifier: String) -> Logger {
         // we could mutate self so protect us thy semaphore
-        lock.wait()
-        defer { lock.signal() }
+        os_unfair_lock_lock(&lock)
+        defer { os_unfair_lock_unlock(&lock) }
 
         if let rv = loggers[identifier] {
             // we will get here for subsequent calls so the over head of this func is O(1)
@@ -127,6 +128,42 @@ public final class Log4swift: @unchecked Sendable {
         return logger
     }
 
+    /**
+     Return the full name of the type the first chunk is the name space
+     ie: 'Foundation.URL'
+     ie: 'Swift.Array<WhatSize.SBItem>'
+
+     To make long generic names more manageable such as this example `IDDPieChart.SlidingView<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<PieChart.MeasuringRootVolumeV2 ...`
+     We will discard all built in SwiftUI types after the first `<` as to finish as `IDDPieChart.SlidingView<MeasuringRootVolumeV2>`
+     */
+    private func getClassID<T>(_ classType: T.Type) -> String {
+        os_unfair_lock_lock(&lock)
+        defer { os_unfair_lock_unlock(&lock) }
+
+        guard let identifier = classIDs[ObjectIdentifier(classType)]
+        else {
+            var identifier = String(reflecting: classType)
+            var tokens = identifier.components(separatedBy: ".")
+            
+            if !tokens.isEmpty,
+               tokens[0] == Self.processName
+            {
+                // tokens[0] = "APP"
+                tokens.remove(at: 0)
+                identifier = tokens.joined(separator: ".")
+            }
+            classIDs[ObjectIdentifier(classType)] = identifier
+            return identifier
+        }
+        
+        // we will get here for subsequent calls so the over head of this func is O(1)
+        return identifier
+    }
+
+    private func getLogger<T>(_ classType: T.Type) -> Logger {
+        return getLogger(getClassID(classType))
+    }
+    
     fileprivate static let executable = {
         Bundle.main.executableURL?.lastPathComponent ?? ""
     }()
@@ -136,8 +173,8 @@ public final class Log4swift: @unchecked Sendable {
      Reset all these cached loggers
      */
     internal func resetLoggers() {
-        lock.wait()
-        defer { lock.signal() }
+        os_unfair_lock_lock(&lock)
+        defer { os_unfair_lock_unlock(&lock) }
 
         loggers.removeAll()
     }
@@ -233,56 +270,26 @@ public final class Log4swift: @unchecked Sendable {
     /**
      Please define the names here with full name space.
      ie: 'IDDSwift.Process'
+     
+     Connvenience
+     ```
+     Log4swift["IDDSwift.Process"].info("say something")
+     Log4swift["IDDSwift.Process"].error("error: '\(error)'")
+     ```
      */
     static public subscript(identifier: String) -> Logger {
         shared.getLogger(identifier)
     }
 
     /**
-     Return the full name of the type the first chunk is the name space
-     ie: 'Foundation.URL'
-     ie: 'Swift.Array<WhatSize.SBItem>'
-
-     To make long generic names more manageable such as this example `IDDPieChart.SlidingView<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<PieChart.MeasuringRootVolumeV2 ...`
-     We will discard all built in SwiftUI types after the first `<` as to finish as `IDDPieChart.SlidingView<MeasuringRootVolumeV2>`
+     Connvenience
+     ```
+     Log4swift[Self.self].info("say something")
+     Log4swift[Self.self].error("error: '\(error)'")
+     ```
      */
-    static public subscript<T>(type: T.Type) -> Logger {
-        var identifier = String(reflecting: type)
-        var tokens = identifier.components(separatedBy: ".")
-
-//        if identifier.range(of: "SwiftUI") != nil {
-//            let processName = Self.processName + "."
-//            let tokens1 = identifier.components(separatedBy: "<")
-//            let tokens2 = tokens1.map({ $0.components(separatedBy: ", ") }).flatMap({ $0 })
-//            var nonSuiftUI = tokens2
-//                .filter({
-//                    $0.range(of: "SwiftUI") == nil
-//                })
-//                .map {
-//                    if let range = $0.range(of: processName),
-//                        range.lowerBound == $0.startIndex
-//                    {
-//                        return String($0[range.upperBound...])
-//                    }
-//                    return $0
-//                }
-//
-//            if nonSuiftUI.count > 1 {
-//                nonSuiftUI.insert("<", at: 1)
-//                nonSuiftUI.append(">")
-//            }
-//            let foo1 = nonSuiftUI.joined(separator: "")
-//            return shared.getLogger(foo1)
-//        }
-
-        if !tokens.isEmpty,
-           tokens[0] == Self.processName
-        {
-            // tokens[0] = "APP"
-            tokens.remove(at: 0)
-            identifier = tokens.joined(separator: ".")
-        }
-        return shared.getLogger(identifier)
+    static public subscript<T>(_ classType: T.Type) -> Logger {
+        shared.getLogger(classType)
     }
 
     /**
