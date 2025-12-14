@@ -11,7 +11,11 @@ import Logging
 
 extension Logging.Logger {
     public var isDebug: Bool {
-        self.logLevel == .debug
+        self.logLevel <= .debug
+    }
+
+    public var isTrace: Bool {
+        self.logLevel <= .trace
     }
 
     @inlinable
