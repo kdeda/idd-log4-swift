@@ -1,19 +1,24 @@
-import XCTest
+//
+//  Log4swiftTests.swift
+//  idd-swift
+//
+//  Created by Klajd Deda on 11/15/25.
+//  Copyright (C) 1997-2025 id-design, inc. All rights reserved.
+//
+
+import Testing
+import Foundation
 import Logging
 @testable import Log4swift
 
-final class Log4swiftTests: XCTestCase {
-    static let allTests = [
-        ("testLogFile", testLogFile)
-    ]
-
+struct Log4swiftTests {
     /**
      Test the log to file.
      Create a config with a file
      Log using it
      Assert that the message we logged is there
      */
-    func testLogFile() throws {
+    @Test func testLogFile() throws {
         let home = URL.init(fileURLWithPath: NSHomeDirectory())
         let logRootURL = home.appendingPathComponent("Library/Logs/Log4swiftTest")
 
@@ -50,7 +55,10 @@ final class Log4swiftTests: XCTestCase {
                 return message != nil
             }
 
-            XCTAssertEqual(matched.count, logMessages.count)
+            Log4swift[Self.self].info("    matched.count: '\(matched.count)'")
+            Log4swift[Self.self].info("logMessages.count: '\(logMessages.count)'")
+
+            #expect(matched.count == logMessages.count)
         }
     }
 }

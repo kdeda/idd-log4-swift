@@ -37,7 +37,7 @@ public final class Log4swift: @unchecked Sendable {
     private var loggers = [String: Logger]()
     private var classIDs: [ObjectIdentifier: String] = [:]
     private var fileLogConfig: FileLogConfig?
-    private var lock = os_unfair_lock()
+    private var lock: UnfairLock = .init()
     private var printThisOnce = true
     private var isConfigured = false
 
@@ -71,8 +71,8 @@ public final class Log4swift: @unchecked Sendable {
      */
     private func getLogger(_ identifier: String) -> Logger {
         // we could mutate self so protect us thy semaphore
-        os_unfair_lock_lock(&lock)
-        defer { os_unfair_lock_unlock(&lock) }
+        lock.lock()
+        defer { lock.unlock() }
 
         if let rv = loggers[identifier] {
             // we will get here for subsequent calls so the over head of this func is O(1)
@@ -137,8 +137,8 @@ public final class Log4swift: @unchecked Sendable {
      We will discard all built in SwiftUI types after the first `<` as to finish as `IDDPieChart.SlidingView<MeasuringRootVolumeV2>`
      */
     private func getClassID<T>(_ classType: T.Type) -> String {
-        os_unfair_lock_lock(&lock)
-        defer { os_unfair_lock_unlock(&lock) }
+        lock.lock()
+        defer { lock.unlock() }
 
         guard let identifier = classIDs[ObjectIdentifier(classType)]
         else {
@@ -173,8 +173,8 @@ public final class Log4swift: @unchecked Sendable {
      Reset all these cached loggers
      */
     internal func resetLoggers() {
-        os_unfair_lock_lock(&lock)
-        defer { os_unfair_lock_unlock(&lock) }
+        lock.lock()
+        defer { lock.unlock() }
 
         loggers.removeAll()
     }

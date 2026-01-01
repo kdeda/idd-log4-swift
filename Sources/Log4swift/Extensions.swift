@@ -56,9 +56,26 @@ extension Thread {
      if we get above that, we would mod it by 999
      having accurate thread index ain't much of a big deal deal for this
      feel free to modify this to fit more digits, but the log lines will end up with mostly empty space
+
+     Will reutrn a string witn no more than 4 chars, as such
+     `main`
+     `t1`
+     `t12`
+     `t112`
+
+     ```
+     09:54:00.671 | <I main>  | .FolderScanHelper  |  you can define -FolderScanHelper.sleepInBetween 100 in milliseconds in the arguments to emulate a slow pipeline
+     09:54:08.138 | <I t.1>   | .processData(timeOut:)  |  '/usr/bin/diff' --exclude .DS_Store -r -q /Volumes/Movies/CloneDB/originals/2025-12-22-095403/Users/kdeda/Developer/git.id-design.com/spm/idd-folder-scan /Volumes/Movies/CloneDB/snapshots/2025-12-22-095403/Users/kdeda/Developer/git.id-design.com/spm/idd-folder-scan
+     09:54:08.243 | <I t.1>   | .testSnapshotManually()  |  results: '3 failures'
+     09:54:08.138 | <I t.12>  | .processData(timeOut:)  |  '/usr/bin/diff' --exclude .DS_Store -r -q /Volumes/Movies/CloneDB/originals/2025-12-22-095403/Users/kdeda/Developer/git.id-design.com/spm/idd-folder-scan /Volumes/Movies/CloneDB/snapshots/2025-12-22-095403/Users/kdeda/Developer/git.id-design.com/spm/idd-folder-scan
+     09:54:08.243 | <I t.12>  | .testSnapshotManually()  |  results: '3 failures'
+     09:54:08.243 | <I t.123> | .testSnapshotManually()  |  results: '3 failures'
+     ```
      */
     internal static var threadIdWith3Digits: String {
-        let clampedDigits = 999 // if you need any more digits just add one more 9 to this
+        let clampedDigits = 999
+        // if you need any more digits just add one more 9 to this
+        // also make sure the extra is not clipped by the .padding on Logging.Logger.Message.logLine
 
         let threadID = currentThreadId()
         let index = {
@@ -75,7 +92,7 @@ extension Thread {
 
         let rawString = (index == 0)
         ? "main"
-        : "th." + "\(index  % clampedDigits)"
+        : "t" + "\(index  % clampedDigits)"
 
         return rawString
     }

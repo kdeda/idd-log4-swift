@@ -57,8 +57,6 @@ fileprivate extension Date {
  We do not want to create any new log entry until the new day starts
  We just ant to roll over the day number
  eg: '2024\_09\_29' -> '2024\_09\_30' -> '2024\_10\_01' etc
-
- we lock it outselves, using the workerLock
  */
 public final class FileLogConfig: @unchecked Sendable {
     enum FileHandlerOutputStream: Error {
@@ -67,7 +65,7 @@ public final class FileLogConfig: @unchecked Sendable {
 
     // eg: /Library/Vapor/ChefTimeServer/logs
     private var logRootURL: URL
-    private let lock = DispatchSemaphore(value: 1)
+    private let lock = NSRecursiveLock()
 
     // eg: 'WhatSize'
     private var prefix: String
@@ -162,8 +160,8 @@ public final class FileLogConfig: @unchecked Sendable {
 
     func write(_ string: String) {
         // we could mutate self so protect us thy semaphore
-        lock.wait()
-        defer { lock.signal() }
+        lock.lock()
+        defer { lock.unlock() }
 
         if let newConfig = self.newConfig {
             // we are now on the next day and new log files.

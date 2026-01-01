@@ -87,8 +87,10 @@ extension Logging.Logger.Message {
         if !Self.processIDFormat_none {
             message += " | <\(ProcessInfo.processInfo.processIdentifier)>"
         }
-        
-        message += " | <\(level.levelString) \(Thread.threadIdWith3Digits)>".padding(toLength: 10, withPad: " ", startingAt: 0)
+
+        // threadIdWith3Digits will be no more than 4 chars, so we clamp this value to make it more tabular and easy to read
+        let infoAndThread = "<\(level.levelString) \(Thread.threadIdWith3Digits)>".padding(toLength: 8, withPad: " ", startingAt: 0)
+        message += " | " + infoAndThread
 
         if !label.isEmpty {
             if Self.callSiteFormat_functionOnly {
