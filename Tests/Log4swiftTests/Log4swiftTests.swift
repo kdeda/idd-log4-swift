@@ -61,4 +61,52 @@ struct Log4swiftTests {
             #expect(matched.count == logMessages.count)
         }
     }
+
+    /**
+     NO CONFIG
+     ```
+     2026-01-09 10:22:36.772 | <18395> | <E main> | Log4swiftTests.Log4swiftTests.getLogger(_:)  |  Using 'I', info level for: 'Log4swiftTests.Log4swiftTests'
+     2026-01-09 10:22:36.772 | <18395> | <I main> | Log4swiftTests.Log4swiftTests.testConfigOptions()  |  Before creating InnerType
+     2026-01-09 10:22:36.772 | <18395> | <I main> | Log4swiftTests.Log4swiftTests.(unknown context at $102b07f3c).(unknown context at $102b07f48).InnerType.init()  |  Created instance of InnerType
+     2026-01-09 10:22:36.772 | <18395> | <I main> | Log4swiftTests.Log4swiftTests.testConfigOptions()  |  Completed
+     ```
+     */
+
+    /**
+     Log4swift.configureCompactSettings
+     ```
+     10:22:17.527 | <E main> | .getLogger(_:)  |  Using 'I', info level for: 'Log4swiftTests.Log4swiftTests'
+     10:22:17.527 | <I main> | .testConfigOptions()  |  Before creating InnerType
+     10:22:17.527 | <I main> | .init()  |  Created instance of InnerType
+     10:22:17.527 | <I main> | .testConfigOptions()  |  Completed
+     ```
+     */
+    /**
+     Log4swift.configureConsoleMode
+     ```
+     10:21:59.142  |  Before creating InnerType
+     10:21:59.144  |  Created instance of InnerType
+     10:21:59.144  |  Completed
+     ```
+     */
+    @Test func testConfigOptions() throws {
+        let home = URL.init(fileURLWithPath: NSHomeDirectory())
+        let logRootURL = home.appendingPathComponent("Library/Logs/Log4swift")
+        let fileConfig: FileLogConfig? = try? .init(logRootURL: logRootURL, appPrefix: "Log4swift", appSuffix: "", daysToKeep: 30)
+
+        // Log4swift.configureCompactSettings()
+        // Log4swift.configureConsoleMode()
+        Log4swift.configure(fileLogConfig: .none)
+
+        struct InnerType {
+            init() {
+                Log4swift[Self.self].info("Created instance of InnerType")
+            }
+        }
+        Log4swift[Self.self].info("Before creating InnerType")
+        InnerType()
+        Log4swift[Self.self].info("Completed")
+        Log4swift[Self.self].info("-----------")
+    }
+
 }

@@ -8,73 +8,37 @@
 
 import Foundation
 
-// MARK: - Date (Internal) -
+// MARK: - ConfigOptions (timeStamp) -
 
-extension Date {
-    /**
-     Configuration
-     -IDDLog.timeStampFormat compact
+extension ConfigOptions {
+    internal static let defaultTimeStamp_: DateFormatter = {
+        let rv = DateFormatter()
 
-     default is 'standard'
-     valid entries are 'standard' and 'compact'
-     */
-    internal static let timeStampFormat_compact = {
-        let processIDFormat = UserDefaults.standard.string(forKey: "IDDLog.timeStampFormat") ?? "standard"
-        if processIDFormat == "compact" {
-            return true
-        }
-        return false
+        rv.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+        rv.locale = Locale.init(identifier: "en_US_POSIX")
+        return rv
     }()
 
-    internal static let dateFormatter: DateFormatter = {
-        let dateFormatter = DateFormatter()
+    internal static let compactTimeStamp_: DateFormatter = {
+        let rv = DateFormatter()
 
-        if Self.timeStampFormat_compact {
-            dateFormatter.dateFormat = "HH:mm:ss.SSS"
-        } else {
-            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        }
-        dateFormatter.locale = Locale.init(identifier: "en_US_POSIX")
-        return dateFormatter
+        rv.dateFormat = "HH:mm:ss.SSS"
+        rv.locale = Locale.init(identifier: "en_US_POSIX")
+        return rv
     }()
 
-    internal static var timeStamp: String {
-        dateFormatter.string(from: Date())
+    var timeStamp: String {
+        if contains(.compactTimeStamp) {
+            return Self.compactTimeStamp_.string(from: Date())
+        }
+        return Self.defaultTimeStamp_.string(from: Date())
     }
 }
 
 // MARK: - Logging.Logger.Message (Internal) -
 
 extension Logging.Logger.Message {
-    /**
-     Configuration
-     -IDDLog.processIDFormat none
-
-     default is 'standard'
-     valid entries are 'standard' and 'none'
-     */
-    internal static let processIDFormat_none = {
-        let processIDFormat = UserDefaults.standard.string(forKey: "IDDLog.processIDFormat") ?? "standard"
-        if processIDFormat == "none" {
-            return true
-        }
-        return false
-    }()
-
-    /**
-     Configuration
-     -IDDLog.callSiteFormat functionOnly
-
-     default is 'standard'
-     valid entries are 'standard' and 'functionOnly'
-     */
-    internal static let callSiteFormat_functionOnly = {
-        let processIDFormat = UserDefaults.standard.string(forKey: "IDDLog.callSiteFormat") ?? "standard"
-        if processIDFormat == "functionOnly" {
-            return true
-        }
-        return false
-    }()
+    internal static let options = ConfigOptions.optionsFromUserDefaults
 
     internal func logLine(
         level: Logging.Logger.Level,
@@ -82,30 +46,42 @@ extension Logging.Logger.Message {
         file: String,
         function: String
     ) -> String {
-        var message = Date.timeStamp
+        var tokens = [String]()
 
-        if !Self.processIDFormat_none {
-            message += " | <\(ProcessInfo.processInfo.processIdentifier)>"
+        tokens.append(Self.options.timeStamp)
+
+        if Self.options.contains(.processID) {
+            tokens.append("<\(ProcessInfo.processInfo.processIdentifier)>")
+        }
+        
+        if Self.options.contains(.threadColumn) {
+            // threadIdWith3Digits will be no more than 4 chars, so we clamp this value to make it more tabular and easy to read
+            let infoAndThreadColumn = "<\(level.levelString) \(Thread.threadIdWith3Digits)>"
+            tokens.append(infoAndThreadColumn.padding(toLength: 8, withPad: " ", startingAt: 0))
         }
 
-        // threadIdWith3Digits will be no more than 4 chars, so we clamp this value to make it more tabular and easy to read
-        let infoAndThread = "<\(level.levelString) \(Thread.threadIdWith3Digits)>".padding(toLength: 8, withPad: " ", startingAt: 0)
-        message += " | " + infoAndThread
-
         if !label.isEmpty {
-            if Self.callSiteFormat_functionOnly {
-                message += " | .\(function) "
-            } else {
-                message += " | \(label).\(function) "
+            if Self.options.contains(.swiftTypeName) {
+                tokens.append(label.appending(".".appending(function)))
+            }
+            else if Self.options.contains(.functionName) {
+                tokens.append(".".appending(function))
             }
         }
-        
-        if !label.isEmpty {
-            message += " |  \(self)\n" // extra space
-        } else {
-            message += " | \(self)\n"
+
+        tokens.append("\(self)\n")
+        var message = ""
+        tokens.enumerated().forEach { item in
+            if item.offset == 0 {
+                message += item.element
+            }
+            else if (item.offset == tokens.count - 1) {
+                message += "  |  " + item.element
+            }
+            else {
+                message += " | " + item.element
+            }
         }
-        
         return message
     }
 }

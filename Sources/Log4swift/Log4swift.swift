@@ -114,8 +114,10 @@ public final class Log4swift: @unchecked Sendable {
             logger.logLevel = .error
         } else {
             if printThisOnce && !logInfo.logID.isEmpty {
-                // print this once
-                logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'")
+                if ConfigOptions.optionsFromUserDefaults.contains(.argumentHelp) {
+                    // print this once
+                    logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'")
+                }
                 printThisOnce = false
             }
         }
@@ -250,21 +252,17 @@ public final class Log4swift: @unchecked Sendable {
     }
 
     /**
-     Will set the following as arguments to avoid thembeing persisted
-     -IDDLog.timeStampFormat compact
-     -IDDLog.callSiteFormat functionOnly
-     -IDDLog.processIDFormat none
+     Convenience
      */
     static public func configureCompactSettings() {
-        // default to standard console
-        var domain = UserDefaults.standard.volatileDomain(forName: "NSArgumentDomain")
+        ConfigOptions.configureCompactSettings()
+    }
 
-        // domain["standardLog"] = "true"
-        domain["IDDLog.timeStampFormat"] = "compact"
-        domain["IDDLog.callSiteFormat"] = "functionOnly"
-        domain["IDDLog.processIDFormat"] = "none"
-
-        UserDefaults.standard.setVolatileDomain(domain, forName: "NSArgumentDomain")
+    /**
+     Convenience
+     */
+    static public func configureConsoleMode() {
+        ConfigOptions.configureConsoleMode()
     }
 
     /**
