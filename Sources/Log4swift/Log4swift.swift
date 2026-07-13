@@ -3,7 +3,7 @@
 //  idd-log4-swift
 //
 //  Created by Klajd Deda on 3/9/23.
-//  Copyright (C) 1997-2025 id-design, inc. All rights reserved.
+//  Copyright (C) 1997-2026 id-design, inc. All rights reserved.
 //
 
 import Foundation
@@ -35,7 +35,6 @@ public final class Log4swift: @unchecked Sendable {
     }()
 
     private var loggers = [String: Logger]()
-    private var classIDs: [ObjectIdentifier: String] = [:]
     private var fileLogConfig: FileLogConfig?
     private var lock: UnfairLock = .init()
     private var printThisOnce = true
@@ -130,40 +129,8 @@ public final class Log4swift: @unchecked Sendable {
         return logger
     }
 
-    /**
-     Return the full name of the type the first chunk is the name space
-     ie: 'Foundation.URL'
-     ie: 'Swift.Array<WhatSize.SBItem>'
-
-     To make long generic names more manageable such as this example `IDDPieChart.SlidingView<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<PieChart.MeasuringRootVolumeV2 ...`
-     We will discard all built in SwiftUI types after the first `<` as to finish as `IDDPieChart.SlidingView<MeasuringRootVolumeV2>`
-     */
-    private func getClassID<T>(_ classType: T.Type) -> String {
-        lock.lock()
-        defer { lock.unlock() }
-
-        guard let identifier = classIDs[ObjectIdentifier(classType)]
-        else {
-            var identifier = String(reflecting: classType)
-            var tokens = identifier.components(separatedBy: ".")
-            
-            if !tokens.isEmpty,
-               tokens[0] == Self.processName
-            {
-                // tokens[0] = "APP"
-                tokens.remove(at: 0)
-                identifier = tokens.joined(separator: ".")
-            }
-            classIDs[ObjectIdentifier(classType)] = identifier
-            return identifier
-        }
-        
-        // we will get here for subsequent calls so the over head of this func is O(1)
-        return identifier
-    }
-
     private func getLogger<T>(_ classType: T.Type) -> Logger {
-        return getLogger(getClassID(classType))
+        return getLogger(ClassID.getClassID(classType))
     }
     
     fileprivate static let executable = {

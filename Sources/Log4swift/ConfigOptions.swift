@@ -3,6 +3,7 @@
 //  idd-log4-swift
 //
 //  Created by Klajd Deda on 1/9/26.
+//  Copyright (C) 1997-2026 id-design, inc. All rights reserved.
 //
 
 import Foundation
