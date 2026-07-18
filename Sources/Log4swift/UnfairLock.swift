@@ -14,48 +14,50 @@ import WinSDK
 import Foundation
 #endif
 
-/**
- This is not recursive.
- A private wrapper to demonstrate code that is windows specific.
- */
-internal final class UnfairLock {
-    #if canImport(Darwin)
+/// A custom backport wrapper for `os_unfair_lock` compatible with macOS 11.0+
+/// as well as Windows and Linux.
+/// You can see private wrapper that demonstrates code that is windows specific.
+public final class UnfairLock<State>: @unchecked Sendable {
+#if canImport(Darwin)
     private var _lock = os_unfair_lock()
-    #elseif canImport(WinSDK)
+#elseif canImport(WinSDK)
     private var _lock = SRWLOCK()
-    #else
+#else
     private let _lock = NSLock()
-    #endif
-    
-    init() {
-        #if canImport(WinSDK)
+#endif
+    private var state: State
+
+    public init(initialState: State) {
+        self.state = initialState
+#if canImport(WinSDK)
         InitializeSRWLock(&_lock)
-        #endif
+#endif
     }
-    
+
     func lock() {
-        #if canImport(Darwin)
+#if canImport(Darwin)
         os_unfair_lock_lock(&_lock)
-        #elseif canImport(WinSDK)
+#elseif canImport(WinSDK)
         AcquireSRWLockExclusive(&_lock)
-        #else
+#else
         _lock.lock()
-        #endif
+#endif
     }
-    
+
     func unlock() {
-        #if canImport(Darwin)
+#if canImport(Darwin)
         os_unfair_lock_unlock(&_lock)
-        #elseif canImport(WinSDK)
+#elseif canImport(WinSDK)
         ReleaseSRWLockExclusive(&_lock)
-        #else
+#else
         _lock.unlock()
-        #endif
+#endif
     }
-    
-    func withLock<T>(_ body: () throws -> T) rethrows -> T {
+
+    /// Mutate or read the state protected by the lock safely
+    public func withLock<R>(_ body: (inout State) -> R) -> R {
         lock()
         defer { unlock() }
-        return try body()
+        return body(&state)
     }
 }

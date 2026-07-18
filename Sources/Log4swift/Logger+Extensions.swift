@@ -83,13 +83,13 @@ extension Logging.Logger {
      ```
      */
     public func infoOncePer(
+        seconds: Int = 60, // in seconds
         _ message: @autoclosure () -> Logger.Message,
-        _ intervalInSeconds: Int = 60, // in seconds
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        Log4swiftCache[Self.self].shouldLog(message(), intervalInSeconds) { logMessage in
+        Log4swiftCache[Self.self].shouldLog(message(), seconds) { logMessage in
             self.log(level: .info, logMessage, metadata: nil, source: nil, file: file, function: function, line: line)
         }
     }
@@ -100,13 +100,13 @@ extension Logging.Logger {
      Avoid frequent log messages of the exact same content.
      */
     public func errorOncePer(
+        seconds: Int = 60, // in seconds
         _ message: @autoclosure () -> Logger.Message,
-        _ intervalInSeconds: Int = 60, // in seconds
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {
-        Log4swiftCache[Self.self].shouldLog(message(), intervalInSeconds) { logMessage in
+        Log4swiftCache[Self.self].shouldLog(message(), seconds) { logMessage in
             self.log(level: .error, logMessage, metadata: nil, source: nil, file: file, function: function, line: line)
         }
     }

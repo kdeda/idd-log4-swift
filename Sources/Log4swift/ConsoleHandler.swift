@@ -40,14 +40,8 @@ public struct ConsoleHandler: LogHandler {
      The abouve command will discard the first 4 columns and display column 5 the last
      pbpaste | cut -d "|" -f 5 | grep filePath | sort
      */
-    public func log(level: Logging.Logger.Level,
-                    message: Logging.Logger.Message,
-                    metadata: Logging.Logger.Metadata?,
-                    source: String,
-                    file: String,
-                    function: String,
-                    line: UInt) {
-        let logLine = message.logLine(level: level, label: label, file: file, function: function)
+    public func log(event: LogEvent) {
+        let logLine = event.message.logLine(level: event.level, label: label, file: event.file, function: event.function)
 
         if ProcessInfo.isRunningInPreviewMode {
             print(logLine, terminator: "")

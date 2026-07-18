@@ -43,14 +43,8 @@ public struct FileLogHandler: LogHandler {
     /**
      Read the ConsoleHandler.log(level:) for more
      */
-    public func log(level: Logger.Level,
-                    message: Logger.Message,
-                    metadata: Logger.Metadata?,
-                    source: String,
-                    file: String,
-                    function: String,
-                    line: UInt) {
-        let logLine = message.logLine(level: level, label: label, file: file, function: function)
+    public func log(event: LogEvent) {
+        let logLine = event.message.logLine(level: event.level, label: label, file: event.file, function: event.function)
 
         if ProcessInfo.isRunningInPreviewMode {
             print(logLine, terminator: "")

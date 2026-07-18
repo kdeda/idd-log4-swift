@@ -16,8 +16,7 @@ final class ClassID: @unchecked Sendable {
     // we lock it outselves, using the lock
     internal static let shared = ClassID()
 
-    private var classIDs: [ObjectIdentifier: String] = [:]
-    private var lock: UnfairLock = .init()
+    private var classIDs: UnfairLock = .init(initialState: [ObjectIdentifier: String]())
 
     /**
      Process /Users/kdeda/Developer/build/Debug/com.id-design.v8.whatsizehelper will return
@@ -39,27 +38,26 @@ final class ClassID: @unchecked Sendable {
      We will discard all built in SwiftUI types after the first `<` as to finish as `IDDPieChart.SlidingView<MeasuringRootVolumeV2>`
      */
     private func getClassID<T>(_ classType: T.Type) -> String {
-        lock.lock()
-        defer { lock.unlock() }
+        classIDs.withLock { classIDs in
+            guard let identifier = classIDs[ObjectIdentifier(classType)]
+            else {
+                var identifier = String(reflecting: classType)
+                var tokens = identifier.components(separatedBy: ".")
 
-        guard let identifier = classIDs[ObjectIdentifier(classType)]
-        else {
-            var identifier = String(reflecting: classType)
-            var tokens = identifier.components(separatedBy: ".")
-
-            if !tokens.isEmpty,
-               tokens[0] == Self.processName
-            {
-                // tokens[0] = "APP"
-                tokens.remove(at: 0)
-                identifier = tokens.joined(separator: ".")
+                if !tokens.isEmpty,
+                   tokens[0] == Self.processName
+                {
+                    // tokens[0] = "APP"
+                    tokens.remove(at: 0)
+                    identifier = tokens.joined(separator: ".")
+                }
+                classIDs[ObjectIdentifier(classType)] = identifier
+                return identifier
             }
-            classIDs[ObjectIdentifier(classType)] = identifier
+
+            // we will get here for subsequent calls so the over head of this func is O(1)
             return identifier
         }
-
-        // we will get here for subsequent calls so the over head of this func is O(1)
-        return identifier
     }
 
     internal static func getClassID<T>(_ classType: T.Type) -> String {

@@ -16,10 +16,10 @@ public final class Log4swiftCache: @unchecked Sendable {
     internal static let shared = Log4swiftCache(identifier: "SHARED")
 
     private var identifier: String
-    private var caches = [String: Log4swiftCache]()
+    private var caches: UnfairLock<[String: Log4swiftCache]> = .init(initialState: .init())
     private var cachedMessage = [Log4SwiftCacheMessage.ID: Log4SwiftCacheMessage]()
-    private var lock: UnfairLock = .init()
-    private var logMessages: [Log4SwiftCacheMessage.ID: Log4SwiftCacheMessage] = [:]
+    private var logMessages: UnfairLock<[Log4SwiftCacheMessage.ID: Log4SwiftCacheMessage]> = .init(initialState: [:])
+//    private var logMessages: [Log4SwiftCacheMessage.ID: Log4SwiftCacheMessage] = [:]
 
     init(identifier: String) {
         self.identifier = identifier
@@ -30,37 +30,35 @@ public final class Log4swiftCache: @unchecked Sendable {
         _ intervalInSeconds: Int, // in seconds
         _ doLog: (_ logMessage: Logger.Message) -> Void
     )  {
-        lock.lock()
-        defer { lock.unlock() }
-
-        let logMessage = message().description
-        let md5 = logMessage.md5
-        guard let lastMessage = logMessages[md5]
-        else {
+        logMessages.withLock { logMessages in
+            let logMessage = message().description
+            let md5 = logMessage.md5
+            guard let lastMessage = logMessages[md5]
+            else {
+                logMessages[md5] = .init(date: .init(), logMessage: logMessage, md5: md5)
+                doLog(Logger.Message(stringLiteral: logMessage))
+                return
+            }
+            let elapsedTimeInSeconds = abs(Int(lastMessage.date.timeIntervalSinceNow))
+            guard elapsedTimeInSeconds > intervalInSeconds
+            else {
+                return
+            }
             logMessages[md5] = .init(date: .init(), logMessage: logMessage, md5: md5)
             doLog(Logger.Message(stringLiteral: logMessage))
-            return
         }
-        let elapsedTimeInSeconds = abs(Int(lastMessage.date.timeIntervalSinceNow))
-        guard elapsedTimeInSeconds > intervalInSeconds
-        else {
-            return
-        }
-        logMessages[md5] = .init(date: .init(), logMessage: logMessage, md5: md5)
-        doLog(Logger.Message(stringLiteral: logMessage))
     }
 
     private func getCache(_ identifier: String) -> Log4swiftCache {
-        lock.lock()
-        defer { lock.unlock() }
-
-        if let rv = caches[identifier] {
-            // we will get here for subsequent calls so the over head of this func is O(1)
+        caches.withLock { caches in
+            if let rv = caches[identifier] {
+                // we will get here for subsequent calls so the over head of this func is O(1)
+                return rv
+            }
+            let rv = Log4swiftCache(identifier: identifier)
+            caches[identifier] = rv
             return rv
         }
-        let rv = Log4swiftCache(identifier: identifier)
-        caches[identifier] = rv
-        return rv
     }
 
     /**

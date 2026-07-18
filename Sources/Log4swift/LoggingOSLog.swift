@@ -31,14 +31,9 @@ public struct LoggingOSLog: LogHandler {
     /**
      Read the ConsoleHandler.log(level:) for more
      */
-    public func log(level: Logger.Level,
-                    message: Logger.Message,
-                    metadata: Logger.Metadata?,
-                    file: String,
-                    function: String,
-                    line: UInt) {
+    public func log(event: LogEvent) {
         var combinedPrettyMetadata = self.prettyMetadata
-        if let metadataOverride = metadata, !metadataOverride.isEmpty {
+        if let metadataOverride = event.metadata, !metadataOverride.isEmpty {
             combinedPrettyMetadata = self.prettify(
                 self.metadata.merging(metadataOverride) {
                     return $1
@@ -46,20 +41,20 @@ public struct LoggingOSLog: LogHandler {
             )
         }
 
-        var formedMessage = message.description
+        var formedMessage = event.message.description
         if combinedPrettyMetadata != nil {
             formedMessage += " -- " + combinedPrettyMetadata!
         }
 
 #if DEBUG
-        let message = message.logLine(level: level, label: label, file: file, function: function)
+        let logLine = event.message.logLine(level: event.level, label: label, file: event.file, function: event.function)
 #else
-        let message = formedMessage
+        let logLine = formedMessage
 #endif
         if ProcessInfo.isRunningInPreviewMode {
-            print(message, terminator: "")
+            print(logLine, terminator: "")
         } else {
-            os_log("%{public}@", log: self.oslogger, type: OSLogType.from(loggerLevel: level), message as NSString)
+            os_log("%{public}@", log: self.oslogger, type: OSLogType.from(loggerLevel: event.level), logLine as NSString)
         }
     }
 

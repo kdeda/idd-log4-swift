@@ -34,9 +34,8 @@ public final class Log4swift: @unchecked Sendable {
         return .none
     }()
 
-    private var loggers = [String: Logger]()
+    private var loggers: UnfairLock = .init(initialState: [String: Logger]())
     private var fileLogConfig: FileLogConfig?
-    private var lock: UnfairLock = .init()
     private var printThisOnce = true
     private var isConfigured = false
 
@@ -69,64 +68,62 @@ public final class Log4swift: @unchecked Sendable {
      -IDDLog.processIDFormat 'none'
      */
     private func getLogger(_ identifier: String) -> Logger {
-        // we could mutate self so protect us thy semaphore
-        lock.lock()
-        defer { lock.unlock() }
-
-        if let rv = loggers[identifier] {
-            // we will get here for subsequent calls so the over head of this func is O(1)
-            return rv
-        }
-
-        // DEDA DEBUG
-        // fully qualified name space debuging ...
-        //   if identifier == "Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>" {
-        //       NSLog("Using 'I', info level for: '\(identifier)'")
-        //   }
-        let logInfo: (logID: String, level: String) = {
-            if let rv = UserDefaults.standard.string(forKey: identifier) {
-                // the exact full name space
-                // ie: `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>`
-                return (logID: identifier, level: rv)
+        loggers.withLock { loggers in
+            if let rv = loggers[identifier] {
+                // we will get here for subsequent calls so the over head of this func is O(1)
+                return rv
             }
 
-            let tokens = identifier.components(separatedBy: "<")
+            // DEDA DEBUG
+            // fully qualified name space debuging ...
+            //   if identifier == "Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>" {
+            //       NSLog("Using 'I', info level for: '\(identifier)'")
+            //   }
+            let logInfo: (logID: String, level: String) = {
+                if let rv = UserDefaults.standard.string(forKey: identifier) {
+                    // the exact full name space
+                    // ie: `Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>`
+                    return (logID: identifier, level: rv)
+                }
 
-            if tokens.count > 0 {
-                let shortcClassName = tokens[0]
-                // the generic name
-                // ie: `Swift.AsyncStream`
-                if let rv = UserDefaults.standard.string(forKey: shortcClassName) {
-                    return (logID: shortcClassName, level: rv)
+                let tokens = identifier.components(separatedBy: "<")
+
+                if tokens.count > 0 {
+                    let shortcClassName = tokens[0]
+                    // the generic name
+                    // ie: `Swift.AsyncStream`
+                    if let rv = UserDefaults.standard.string(forKey: shortcClassName) {
+                        return (logID: shortcClassName, level: rv)
+                    }
+                }
+
+                return (logID: identifier, level: "")
+            }()
+
+            var logger = Logger(label: identifier)
+            if logInfo.level == "D" {
+                logger.logLevel = .debug
+            } else if logInfo.level == "T" {
+                logger.logLevel = .trace
+            } else if logInfo.level == "E" {
+                logger.logLevel = .error
+            } else {
+                if printThisOnce && !logInfo.logID.isEmpty {
+                    if ConfigOptions.optionsFromUserDefaults.contains(.argumentHelp) {
+                        // print this once
+                        logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'")
+                    }
+                    printThisOnce = false
                 }
             }
 
-            return (logID: identifier, level: "")
-        }()
-
-        var logger = Logger(label: identifier)
-        if logInfo.level == "D" {
-            logger.logLevel = .debug
-        } else if logInfo.level == "T" {
-            logger.logLevel = .trace
-        } else if logInfo.level == "E" {
-            logger.logLevel = .error
-        } else {
-            if printThisOnce && !logInfo.logID.isEmpty {
-                if ConfigOptions.optionsFromUserDefaults.contains(.argumentHelp) {
-                    // print this once
-                    logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'")
-                }
-                printThisOnce = false
+            // if the global is defined and differs it takes precedence
+            if let globalLevel = Self.globalLevel, globalLevel != logger.logLevel {
+                logger.logLevel = globalLevel
             }
+            loggers[identifier] = logger
+            return logger
         }
-
-        // if the global is defined and differs it takes precedence
-        if let globalLevel = Self.globalLevel, globalLevel != logger.logLevel {
-            logger.logLevel = globalLevel
-        }
-        loggers[identifier] = logger
-        return logger
     }
 
     private func getLogger<T>(_ classType: T.Type) -> Logger {
@@ -142,10 +139,9 @@ public final class Log4swift: @unchecked Sendable {
      Reset all these cached loggers
      */
     internal func resetLoggers() {
-        lock.lock()
-        defer { lock.unlock() }
-
-        loggers.removeAll()
+        loggers.withLock { loggers in
+            loggers.removeAll()
+        }
     }
 
 
