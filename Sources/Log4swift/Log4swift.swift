@@ -111,7 +111,7 @@ public final class Log4swift: @unchecked Sendable {
                 if printThisOnce && !logInfo.logID.isEmpty {
                     if ConfigOptions.optionsFromUserDefaults.contains(.argumentHelp) {
                         // print this once
-                        logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'")
+                        logger.log(level: .error, "Using 'I', info level for: '\(logInfo.logID)'", file: "")
                     }
                     printThisOnce = false
                 }

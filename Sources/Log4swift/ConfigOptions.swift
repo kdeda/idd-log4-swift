@@ -9,6 +9,10 @@
 import Foundation
 import Logging
 
+/**
+ Helper to configure loggin
+ Usually from command line, ie: `UserDefaults.standard.volatileDomain(forName: "NSArgumentDomain")`
+ */
 public struct ConfigOptions: OptionSet, Sendable {
     public let rawValue: Int
 
@@ -26,16 +30,20 @@ public struct ConfigOptions: OptionSet, Sendable {
     // default display the thread column as `<I main> or <I t14>, where t14 is the thread number, up to 999`
     static let threadColumn = Self(rawValue: 1 << 3)
 
+    // displays the file name and line count as `Log4swift/Log4swift.swift:114`
+    // by default is on, it can be removed via the
+    static let fileName = Self(rawValue: 1 << 4)
+
     // displays the name of the Swift.Type as `IDDList.IDDList<IDDFolderScan.NodeEntry> or Swift.String or Swift.AsyncStream<Swift.Array<IDDFolderScan.NodeEntry>>`
-    // by default is on, can be removed via the
-    static let swiftTypeName = Self(rawValue: 1 << 4)
+    // by default is off, it can be added via the -Log4swift.hideSwiftTypeName false
+    static let swiftTypeName = Self(rawValue: 1 << 5)
 
     // display the name of a function as `.categorize or ._handleEvent(_:) etc`
     // by default is on and can't be removed
-    static let functionName = Self(rawValue: 1 << 5)
+    static let functionName = Self(rawValue: 1 << 6)
 
     // display the argument config such as `Using 'I', info level for: 'Log4swiftTests.Log4swiftTests'`
-    static let argumentHelp = Self(rawValue: 1 << 6)
+    static let argumentHelp = Self(rawValue: 1 << 7)
 
     public init(rawValue: Int) {
         self.rawValue = rawValue
@@ -45,6 +53,7 @@ public struct ConfigOptions: OptionSet, Sendable {
      Will set the following as arguments to avoid them being persisted
      -Log4swift.compactTimeStamp true
      -Log4swift.hideProcessID true
+     -Log4swift.hideFileName true
      -Log4swift.hideSwiftTypeName true
      */
     static public func configureCompactSettings() {
@@ -52,6 +61,7 @@ public struct ConfigOptions: OptionSet, Sendable {
 
         domain["Log4swift.compactTimeStamp"] = "true"
         domain["Log4swift.hideProcessID"] = "true"
+        domain["Log4swift.hideFileName"] = "true"
         domain["Log4swift.hideSwiftTypeName"] = "true"
 
         UserDefaults.standard.setVolatileDomain(domain, forName: "NSArgumentDomain")
@@ -63,6 +73,7 @@ public struct ConfigOptions: OptionSet, Sendable {
      -Log4swift.compactTimeStamp true
      -Log4swift.hideProcessID true
      -Log4swift.hideThreadColumn true
+     -Log4swift.hideFileName true
      -Log4swift.hideSwiftTypeName true
      -Log4swift.hideFunctionName true
      -Log4swift.hideArgumentHelp true
@@ -73,6 +84,7 @@ public struct ConfigOptions: OptionSet, Sendable {
         domain["Log4swift.compactTimeStamp"] = "true"
         domain["Log4swift.hideProcessID"] = "true"
         domain["Log4swift.hideThreadColumn"] = "true"
+        domain["Log4swift.hideFileName"] = "true"
         domain["Log4swift.hideSwiftTypeName"] = "true"
         domain["Log4swift.hideFunctionName"] = "true"
         domain["Log4swift.hideArgumentHelp"] = "true"
@@ -81,10 +93,18 @@ public struct ConfigOptions: OptionSet, Sendable {
     }
 
     /**
-     Return default set with [.defaultTimeStamp, .processID, .threadColumn, .swiftTypeName, .functionName]
+     Return default set with [.defaultTimeStamp, .processID, .threadColumn, .fileName, .swiftTypeName, .functionName]
      */
     public static let defaultOptions: Self = {
-        let options: Self = [.defaultTimeStamp, .processID, .threadColumn, .swiftTypeName, .functionName, .argumentHelp]
+        let options: Self = [
+            .defaultTimeStamp,
+            .processID,
+            .threadColumn,
+            .fileName,
+            // .swiftTypeName,
+            .functionName,
+            .argumentHelp
+        ]
         return options
     }()
 
@@ -109,6 +129,10 @@ public struct ConfigOptions: OptionSet, Sendable {
             options.remove(.threadColumn)
         }
 
+        if UserDefaults.standard.bool(forKey: "Log4swift.hideFileName") {
+            options.remove(.fileName)
+        }
+
         if UserDefaults.standard.bool(forKey: "Log4swift.hideSwiftTypeName") {
             options.remove(.swiftTypeName)
         }
@@ -130,21 +154,24 @@ extension ConfigOptions: CustomStringConvertible {
         var tokens: [String] = []
 
         if contains(.compactTimeStamp) {
-            tokens.append(".compactTimeStamp")
+            tokens.append("TIME_STAMP.compactTimeStamp")
         } else {
-            tokens.append(".defaultTimeStamp")
+            tokens.append("TIME_STAMP.defaultTimeStamp")
         }
         if contains(.processID) {
-            tokens.append(".processID")
+            tokens.append("PROCESS_ID.processID")
         }
         if contains(.threadColumn) {
-            tokens.append(".threadColumn")
+            tokens.append("THREAD_ID.threadColumn")
+        }
+        if contains(.fileName) {
+            tokens.append("FILE_NAME.fileName")
         }
         if contains(.swiftTypeName) {
-            tokens.append(".swiftTypeName")
+            tokens.append("SWIFT_TYPE.swiftTypeName")
         }
         if contains(.functionName) {
-            tokens.append(".functionName")
+            tokens.append("FUNCTION_NAME.functionName")
         }
         if contains(.argumentHelp) {
             tokens.append(".argumentHelp")

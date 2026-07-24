@@ -22,24 +22,39 @@ extension Logging.Logger {
     /**
      Convenience to log the function name, usually inside a client.
      */
-    public func info(function: String, _ message: @autoclosure () -> Logger.Message) {
-        self.log(level: .info, message(), metadata: nil, source: nil, file: #file, function: function, line: #line)
+    public func info(
+        function: String,
+        _ message: @autoclosure () -> Logger.Message,
+        file: String = #fileID,
+        line: UInt = #line
+    ) {
+        self.log(level: .info, message(), metadata: nil, source: nil, file: file, function: function, line: line)
     }
 
     @inlinable
     /**
      Convenience to log the function name, usually inside a client.
      */
-    public func debug(function: String, _ message: @autoclosure () -> Logger.Message) {
-        self.log(level: .debug, message(), metadata: nil, source: nil, file: #file, function: function, line: #line)
+    public func debug(
+        function: String,
+        _ message: @autoclosure () -> Logger.Message,
+        file: String = #fileID,
+        line: UInt = #line
+    ) {
+        self.log(level: .debug, message(), metadata: nil, source: nil, file: file, function: function, line: line)
     }
 
     @inlinable
     /**
      Convenience to log the function name, usually inside a client.
      */
-    public func error(function: String, _ message: @autoclosure () -> Logger.Message) {
-        self.log(level: .error, message(), metadata: nil, source: nil, file: #file, function: function, line: #line)
+    public func error(
+        function: String,
+        _ message: @autoclosure () -> Logger.Message,
+        file: String = #fileID,
+        line: UInt = #line
+    ) {
+        self.log(level: .error, message(), metadata: nil, source: nil, file: file, function: function, line: line)
     }
 
     @inlinable
@@ -55,15 +70,20 @@ extension Logging.Logger {
             let maxCount = min(128, stringMessage.count)
             return Logger.Message.init(stringLiteral: String(repeating: "-", count: maxCount))
         }
-        self.log(level: .info, dashMessage(), metadata: nil, source: nil, file: #file, function: function, line: #line)
+        self.log(level: .info, dashMessage(), metadata: nil, source: nil, file: file, function: function, line: line)
     }
 
     @inlinable
     /**
      Convenience to log the function name, usually inside a client.
      */
-    public func dash(function: String, _ message: @autoclosure () -> Logger.Message) {
-        self.dash(message(), metadata: nil, file: #file, function: function, line: #line)
+    public func dash(
+        function: String,
+        _ message: @autoclosure () -> Logger.Message,
+        file: String = #fileID,
+        line: UInt = #line
+    ) {
+        self.dash(message(), metadata: nil, file: file, function: function, line: line)
     }
 
     @inlinable
