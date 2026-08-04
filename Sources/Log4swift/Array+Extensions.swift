@@ -32,32 +32,36 @@ extension Array {
      ```
      */
     public var multilineDescription: String {
-        self.enumerated().reduce(into: "[") { partialResult, element in
+        let rv = self.enumerated().reduce(into: "") { partialResult, element in
             partialResult += "\n        "
             partialResult += "\(element.element)"
             if element.offset == self.count - 1 {
-                partialResult += "\n]"
+                partialResult += "\n"
             }
             else {
                 partialResult += ","
             }
         }
+
+        return "[" + rv + "]"
     }
 
     public func multilineDescription<Value>(
         _ keyPath: KeyPath<Element, Value>
-    ) -> String where Value: CustomDebugStringConvertible
+    ) -> String
     {
-        self.enumerated().reduce(into: "[") { partialResult, element in
+        let rv = self.enumerated().reduce(into: "") { partialResult, element in
             partialResult += "\n        "
             partialResult += "\(element.element[keyPath: keyPath])"
             if element.offset == self.count - 1 {
-                partialResult += "\n]"
+                partialResult += "\n"
             }
             else {
                 partialResult += ","
             }
         }
+
+        return "[" + rv + "]"
     }
 
 }
