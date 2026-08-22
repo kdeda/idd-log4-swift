@@ -47,7 +47,7 @@ public struct LoggingOSLog: LogHandler {
         }
 
 #if DEBUG
-        let logLine = event.message.logLine(level: event.level, label: label, file: event.file, function: event.function)
+        let logLine = event.message.logLine(level: event.level, label: label, file: event.file, function: event.function, line: event.line)
 #else
         let logLine = formedMessage
 #endif
