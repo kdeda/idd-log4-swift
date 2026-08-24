@@ -1,5 +1,5 @@
 //
-//  Message+Extension.swift
+//  Logging.LogEvent+Extension.swift
 //  idd-log4-swift
 //
 //  Created by Klajd Deda on 12/27/24.
@@ -37,19 +37,14 @@ extension ConfigOptions {
 
 // MARK: - Logging.Logger.Message (Internal) -
 
-extension Logging.Logger.Message {
+extension Logging.LogEvent {
     internal static let options = ConfigOptions.optionsFromUserDefaults
+    internal static let columnSeparator = "  |  "
 
     /**
-     Will build the real string to log
+     Will build the real string to log as we want it
      */
-    internal func logLine(
-        level: Logging.Logger.Level,
-        label: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) -> String {
+    internal func logLine(label: String) -> String {
         var tokens = [String]()
 
         tokens.append(Self.options.timeStamp)
@@ -82,7 +77,7 @@ extension Logging.Logger.Message {
             }
         }
 
-        tokens.append("\(self)\n")
-        return tokens.joined(separator: "  |  ")
+        tokens.append("\(self.message)\n")
+        return tokens.joined(separator: Self.columnSeparator)
     }
 }

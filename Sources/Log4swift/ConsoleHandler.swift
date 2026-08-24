@@ -41,7 +41,7 @@ public struct ConsoleHandler: LogHandler {
      pbpaste | cut -d "|" -f 5 | grep filePath | sort
      */
     public func log(event: LogEvent) {
-        let logLine = event.message.logLine(level: event.level, label: label, file: event.file, function: event.function, line: event.line)
+        let logLine = event.logLine(label: label)
 
         if ProcessInfo.isRunningInPreviewMode {
             print(logLine, terminator: "")

@@ -13,10 +13,10 @@ import Logging
 
 struct Log4swiftTests {
     /**
-     Test the log to file.
+     Test a few log messages to file.
      Create a config with a file
      Log using it
-     Assert that the message we logged is there
+     Assert that the messages we logged are there
      */
     @Test func testLogFile() throws {
         let home = URL.init(fileURLWithPath: NSHomeDirectory())
@@ -50,15 +50,22 @@ struct Log4swiftTests {
             let readMessages = readMessages_.components(separatedBy: "\n")
                 .compactMap { $0.isEmpty ? nil : $0 }
 
-            let matched = readMessages.filter { readMessage in
+            let matchedLogLines = readMessages.filter { readMessage in
                 let message = logMessages.first { readMessage.hasSuffix($0) }
                 return message != nil
             }
 
-            Log4swift[Self.self].info("    matched.count: '\(matched.count)'")
-            Log4swift[Self.self].info("logMessages.count: '\(logMessages.count)'")
+            Log4swift[Self.self].info("matchedLogLines.count: '\(matchedLogLines.count)'")
+            Log4swift[Self.self].info("    logMessages.count: '\(logMessages.count)'")
 
-            #expect(matched.count == logMessages.count)
+            #expect(logMessages.count == matchedLogLines.count)
+
+            // more strict testing, the messages have to match 100%
+            let matchedLogMessages = matchedLogLines.map { logLine -> String in
+                let logMessageTokens = logLine.components(separatedBy: Logging.LogEvent.columnSeparator)
+                return logMessageTokens.last ?? ""
+            }
+            #expect(logMessages == matchedLogMessages)
         }
     }
 
