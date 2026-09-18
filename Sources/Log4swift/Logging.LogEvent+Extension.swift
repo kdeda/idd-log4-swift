@@ -37,6 +37,23 @@ extension ConfigOptions {
 
 // MARK: - Logging.Logger.Message (Internal) -
 
+/**
+ by adding | as column separators we make the logs easier to visually and programatically parse.
+ by trying to keep the basic columns of the same width it helps a bit more with visual feed back
+ it appears as if you are reading  spread sheet
+
+ threadIdWith3Digits will be at most 6 chars long, where 3 are the thread digits,
+ without clamping, its column width would vary on a heavy threaded app, so we clamp it to a max of 3 digits for the thread number
+
+ at this point the logs should be fairly formatted but we do more
+ if you use bash you can use the amazing cut command to cut a line by tokens
+ too bad it does not handle more than one char.
+
+ copy paste a bunch of log lines and
+ pbpaste | cut -d "|" -f 5
+ The abouve command will discard the first 4 columns and display column 5 the last
+ pbpaste | cut -d "|" -f 5 | grep filePath | sort
+ */
 extension Logging.LogEvent {
     internal static let options = ConfigOptions.optionsFromUserDefaults
     internal static let columnSeparator = "  |  "

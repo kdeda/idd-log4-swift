@@ -172,7 +172,7 @@ public final class Log4swift: @unchecked Sendable {
         shared.isConfigured = true
         if UserDefaults.standard.bool(forKey: "standardLog") {
             LoggingSystem.bootstrap { label in
-                ConsoleHandler(label: label)
+                ConsoleHandler(label: label, logFunction: logFunction)
             }
             Self.log("\n")
             return
@@ -199,7 +199,7 @@ public final class Log4swift: @unchecked Sendable {
         guard let fileLogConfig = fileLogConfig
         else {
             LoggingSystem.bootstrap { label in
-                ConsoleHandler(label: label)
+                ConsoleHandler(label: label, logFunction: logFunction)
             }
             Self.log("\n")
             return
@@ -271,6 +271,8 @@ public final class Log4swift: @unchecked Sendable {
         fileLogConfig.write(message)
     }
 
+    @MainActor
+    public static var logFunction: (@Sendable (_ identifier: String, _ event: Logging.LogEvent) -> Void)?
 }
 
 public extension Logger {

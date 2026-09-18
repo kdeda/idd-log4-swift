@@ -25,10 +25,10 @@ public final class UnfairLock<State>: @unchecked Sendable {
 #else
     private let _lock = NSLock()
 #endif
-    private var state: State
+    private var state_: State
 
     public init(initialState: State) {
-        self.state = initialState
+        self.state_ = initialState
 #if canImport(WinSDK)
         InitializeSRWLock(&_lock)
 #endif
@@ -54,10 +54,17 @@ public final class UnfairLock<State>: @unchecked Sendable {
 #endif
     }
 
+    /// Return the innards
+    public var value: State {
+        lock()
+        defer { unlock() }
+        return state_
+    }
+
     /// Mutate or read the state protected by the lock safely
     public func withLock<R>(_ body: (inout State) -> R) -> R {
         lock()
         defer { unlock() }
-        return body(&state)
+        return body(&state_)
     }
 }

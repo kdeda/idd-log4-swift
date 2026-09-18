@@ -19,7 +19,6 @@ public final class Log4swiftCache: @unchecked Sendable {
     private var caches: UnfairLock<[String: Log4swiftCache]> = .init(initialState: .init())
     private var cachedMessage = [Log4SwiftCacheMessage.ID: Log4SwiftCacheMessage]()
     private var logMessages: UnfairLock<[Log4SwiftCacheMessage.ID: Log4SwiftCacheMessage]> = .init(initialState: [:])
-//    private var logMessages: [Log4SwiftCacheMessage.ID: Log4SwiftCacheMessage] = [:]
 
     init(identifier: String) {
         self.identifier = identifier

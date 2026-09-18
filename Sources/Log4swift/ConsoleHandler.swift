@@ -23,34 +23,26 @@ public struct ConsoleHandler: LogHandler {
     }
 
     private var label: String
-    /**
-     by adding | as column separators we make the logs easier to visually and programatically parse.
-     by trying to keep the basic columns of the same width it helps a bit more with visual feed back
-     it appears as if you are reading  spread sheet
+    public  var logFunction: (@Sendable (_ identifier: String, _ event: Logging.LogEvent) -> Void)?
 
-     threadIdWith3Digits will be at most 6 chars long, where 3 are the thread digits,
-     without clamping, its column width would vary on a heavy threaded app, so we clamp it to a max of 3 digits for the thread number
-
-     at this point the logs should be fairly formatted but we do more
-     if you use bash you can use the amazing cut command to cut a line by tokens
-     too bad it does not handle more than one char.
-
-     copy paste a bunch of log lines and
-     pbpaste | cut -d "|" -f 5
-     The abouve command will discard the first 4 columns and display column 5 the last
-     pbpaste | cut -d "|" -f 5 | grep filePath | sort
-     */
     public func log(event: LogEvent) {
-        let logLine = event.logLine(label: label)
-
-        if ProcessInfo.isRunningInPreviewMode {
-            print(logLine, terminator: "")
-        } else {
-            fputs(logLine, stdout)
+        guard !ProcessInfo.isRunningInPreviewMode
+        else {
+            print(event.logLine(label: label), terminator: "")
+            return
         }
+        
+        guard let logFunction = self.logFunction
+        else {
+            fputs(event.logLine(label: label), stdout)
+            return
+        }
+        
+        logFunction(label, event)
     }
 
-    public init(label: String) {
+    public init(label: String, logFunction: (@Sendable (_ identifier: String, _ event: Logging.LogEvent) -> Void)?) {
         self.label = label
+        self.logFunction = logFunction
     }
 }
